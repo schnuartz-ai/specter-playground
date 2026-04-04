@@ -1,0 +1,474 @@
+{
+  "_metadata": {
+    "language_code": "de",
+    "language_name": "Deutsch",
+    "version": "1.0",
+    "description": "German language file for Specter UI"
+  },
+  "translations": {
+    "MAIN_MENU_TITLE": {
+      "text": "Was möchtest du tun?",
+      "ref_en": "What do you want to do?"
+    },
+    "MAIN_MENU_SCAN_QR": {
+      "text": "QR-Code scannen",
+      "ref_en": "Scan QR"
+    },
+    "HELP_SCAN_QR": {
+      "text": "Verwende die Kamera um einen QR-Code zu scannen. Dies kann verwendet werden um Transaktionen zu empfangen, Wallet-Deskriptoren zu importieren oder PSBTs (Partially Signed Bitcoin Transactions) zum Signieren zu verarbeiten.",
+      "ref_en": "Use the camera to scan a QR code. This can be used to receive transactions, import wallet descriptors, or process PSBTs (Partially Signed Bitcoin Transactions) for signing."
+    },
+    "MAIN_MENU_LOAD_FROM_SD": {
+      "text": "von SD-Karte laden",
+      "ref_en": "Load from SD-Card"
+    },
+    "MAIN_MENU_PROCESS_INPUT": {
+      "text": "Eingabe verarbeiten",
+      "ref_en": "Process input"
+    },
+    "MAIN_MENU_SIGN_MESSAGE": {
+      "text": "Nachricht signieren",
+      "ref_en": "Sign Message"
+    },
+    "MAIN_MENU_SEED_AND_WALLET": {
+      "text": "Seed & Wallet",
+      "ref_en": "Seed & Wallet"
+    },
+    "MAIN_MENU_MANAGE_SEED_WALLET": {
+      "text": "Seed / Wallet verwalten",
+      "ref_en": "Manage Seed / Wallet"
+    },
+    "MAIN_MENU_CONNECT_SECTION": {
+      "text": "Verbinden",
+      "ref_en": "Connect"
+    },
+    "MAIN_MENU_CONNECT_COMPANION": {
+      "text": "Companion App verbinden",
+      "ref_en": "Connect Companion App"
+    },
+    "WALLET_BAR_NO_SEED": {
+      "text": "Kein Seed",
+      "ref_en": "No Seed"
+    },
+    "WALLET_BAR_NO_WALLET": {
+      "text": "Keine Wallet",
+      "ref_en": "No Wallet"
+    },
+    "WALLET_MENU_EXPLORE": {
+      "text": "Erkunden",
+      "ref_en": "Explore"
+    },
+    "WALLET_MENU_VIEW_ADDRESSES": {
+      "text": "Adressen anzeigen",
+      "ref_en": "View Addresses"
+    },
+    "WALLET_MENU_VIEW_SIGNERS": {
+      "text": "Signierer anzeigen",
+      "ref_en": "View Signers"
+    },
+    "WALLET_MENU_MANAGE": {
+      "text": "Verwalten",
+      "ref_en": "Manage"
+    },
+    "WALLET_MENU_MANAGE_DESCRIPTOR": {
+      "text": "Descriptor verwalten",
+      "ref_en": "View/Edit Descriptor"
+    },
+    "WALLET_MENU_CHANGE_NETWORK": {
+      "text": "Netzwerk wechseln",
+      "ref_en": "Change Network"
+    },
+    "WALLET_MENU_CONNECT_EXPORT": {
+      "text": "Verbinden/Exportieren",
+      "ref_en": "Connect/Export"
+    },
+    "WALLET_MENU_EXPORT_DATA": {
+      "text": "Daten exportieren",
+      "ref_en": "Export Data"
+    },
+    "ADD_WALLET_IMPORT_FROM": {
+      "text": "Seedphrase importieren von",
+      "ref_en": "Import from"
+    },
+    "ADD_WALLET_CUSTOMIZE": {
+      "text": "Anpassen",
+      "ref_en": "Customize"
+    },
+    "ADD_WALLET_CREATE_CUSTOM": {
+      "text": "Eigenen Descriptor erstellen",
+      "ref_en": "Create Custom Descriptor"
+    },
+    "ADD_WALLET_THRESHOLD": {
+      "text": "Quorum:",
+      "ref_en": "Threshold: "
+    },
+    "ADD_WALLET_SIGNERS": {
+      "text": "Signierer:",
+      "ref_en": "Signers: "
+    },
+    "ADD_WALLET_CUSTOM": {
+      "text": "Eigenes",
+      "ref_en": "Custom"
+    },
+    "ADD_SWITCH_WALLET_MENU_WALLETS_FOR_SEED": {
+      "text": "Wallets für aktiven Seed",
+      "ref_en": "Wallets for active seed"
+    },
+    "ADD_SWITCH_WALLET_MENU_OTHER_WALLETS": {
+      "text": "Andere Wallets",
+      "ref_en": "Other wallets"
+    },
+    "ADD_SWITCH_SEED_MENU_SEEDS_FOR_WALLET": {
+      "text": "Seeds für aktive Wallet",
+      "ref_en": "Seeds for active wallet"
+    },
+    "ADD_SWITCH_SEED_MENU_OTHER_SEEDS": {
+      "text": "Andere Seeds",
+      "ref_en": "Other seeds"
+    },
+    "GENERATE_SEED_FINGERPRINT": {
+      "text": "Fingerprint:",
+      "ref_en": "Fingerprint: "
+    },
+    "GENERATE_SEED_INFO": {
+      "text": "Eine neue 24-Wort-Seed wird generiert. Du kannst sie nach der Erstellung sichern.",
+      "ref_en": "A new 24-word seed will be generated. You can back it up after creation."
+    },
+    "ADD_SEED_GENERATE_SECTION": {
+      "text": "Erzeuge",
+      "ref_en": "Generate"
+    },
+    "ADD_SEED_GENERATE_SEED": {
+      "text": "Neue Seed",
+      "ref_en": "New Seed"
+    },
+    "ADD_SEED_IMPORT_SECTION": {
+      "text": "Importieren bestehende Seed von",
+      "ref_en": "Import existing Seed from"
+    },
+    "MANAGE_SW_SEED_SECTION_TITLE": {
+      "text": "Seed",
+      "ref_en": "Seed"
+    },
+    "MANAGE_SW_WALLET_SECTION_TITLE": {
+      "text": "Wallet",
+      "ref_en": "Wallet"
+    },
+    "PASSPHRASE_MENU_LABEL": {
+      "text": "Passphrase:",
+      "ref_en": "Passphrase:"
+    },
+    "PASSPHRASE_MENU_CLEAR": {
+      "text": "Löschen",
+      "ref_en": "Clear"
+    },
+    "SEEDPHRASE_MENU_SHOW": {
+      "text": "Seedphrase anzeigen",
+      "ref_en": "Show Seed"
+    },
+    "SEEDPHRASE_MENU_STORAGE": {
+      "text": "Speicher",
+      "ref_en": "Storage"
+    },
+    "SEEDPHRASE_MENU_STORE_TO": {
+      "text": "Speichern auf",
+      "ref_en": "Store to"
+    },
+    "SEEDPHRASE_MENU_CLEAR_FROM": {
+      "text": "Löschen von",
+      "ref_en": "Clear from"
+    },
+    "SEEDPHRASE_MENU_CLEAR_ALL": {
+      "text": "von allen angeschlossenen Speichern",
+      "ref_en": "all attached storage"
+    },
+    "SEEDPHRASE_MENU_ADVANCED": {
+      "text": "Erweiterte Funktionen",
+      "ref_en": "Advanced Features"
+    },
+    "SEEDPHRASE_MENU_BIP85": {
+      "text": "Neue via BIP-85 ableiten",
+      "ref_en": "Derive new via BIP-85"
+    },
+    "CONNECT_WALLETS_SPARROW": {
+      "text": "Sparrow",
+      "ref_en": "Sparrow"
+    },
+    "CONNECT_WALLETS_NUNCHUCK": {
+      "text": "Nunchuck",
+      "ref_en": "Nunchuck"
+    },
+    "CONNECT_WALLETS_BLUEWALLET": {
+      "text": "BlueWallet",
+      "ref_en": "BlueWallet"
+    },
+    "CONNECT_WALLETS_OTHER": {
+      "text": "Andere...",
+      "ref_en": "Other..."
+    },
+    "DEVICE_MENU_DISPLAY": {
+      "text": "Display konfigurieren",
+      "ref_en": "Manage Display"
+    },
+    "DEVICE_MENU_SOUNDS": {
+      "text": "Töne konfigurieren",
+      "ref_en": "Manage Sounds"
+    },
+    "DEVICE_MENU_DANGERZONE": {
+      "text": "Gefahrenzone",
+      "ref_en": "Dangerzone"
+    },
+    "DEVICE_MENU_WIPE": {
+      "text": "Gerät zurücksetzen",
+      "ref_en": "Wipe Device"
+    },
+    "HELP_DEVICE_MENU_WIPE": {
+      "text": "WARNUNG: Dies löscht ALLE Daten auf dem Gerät permanent, einschließlich deiner Seedphrase, Wallet-Konfigurationen und Einstellungen.\nDiese Aktion kann nicht rückgängig gemacht werden.\nStelle sicher, dass du ein Backup deiner Seedphrase hast bevor du fortfährst!",
+      "ref_en": "WARNING: This will permanently erase ALL data on the device including your seed, wallet configurations, and settings.\nThis action cannot be undone.\nMake sure you have a backup of your seed before proceeding!"
+    },
+    "DEVICE_MENU_RESTART_TOUR": {
+      "text": "Tour neu starten",
+      "ref_en": "Restart Tour"
+    },
+    "FIRMWARE_MENU_CURRENT_VERSION": {
+      "text": "Aktuelle Version ",
+      "ref_en": "Current version "
+    },
+    "FIRMWARE_MENU_UPDATE_VIA": {
+      "text": ". Aktualisieren via",
+      "ref_en": ". Update via"
+    },
+    "BACKUPS_MENU_BACKUP_TO_SD": {
+      "text": "Backup auf SD-Karte",
+      "ref_en": "Backup to SD Card"
+    },
+    "BACKUPS_MENU_RESTORE_FROM_SD": {
+      "text": "Von SD-Karte wiederherstellen",
+      "ref_en": "Restore from SD Card"
+    },
+    "BACKUPS_MENU_REMOVE_FROM_SD": {
+      "text": "Von SD-Karte entfernen",
+      "ref_en": "Remove from SD Card"
+    },
+    "BACKUPS_MENU_NO_SD_DETECTED": {
+      "text": "Keine SD-Karte erkannt",
+      "ref_en": "No SD Card detected"
+    },
+    "SECURITY_MENU_CHANGE_PIN": {
+      "text": "PIN ändern",
+      "ref_en": "Change PIN"
+    },
+    "SECURITY_MENU_SELF_TEST": {
+      "text": "Selbsttest ausführen",
+      "ref_en": "Run Self-Test"
+    },
+    "SECURITY_MENU_PIN_RETRIES": {
+      "text": "Erlaubte PIN-Versuche festlegen",
+      "ref_en": "Set allowed PIN retries"
+    },
+    "SECURITY_MENU_PIN_ACTION": {
+      "text": "Aktion bei überschrittenen PIN-Versuchen festlegen",
+      "ref_en": "Set exceeded PIN retries action"
+    },
+    "SECURITY_MENU_DURESS_PIN": {
+      "text": "Zwangs-PIN festlegen",
+      "ref_en": "Set duress PIN"
+    },
+    "SECURITY_MENU_DURESS_ACTION": {
+      "text": "Zwangs-PIN-Aktion festlegen",
+      "ref_en": "Set duress PIN action"
+    },
+    "STORAGE_MENU_INTERNAL_FLASH": {
+      "text": "Internen Speicher verwalten",
+      "ref_en": "Manage internal flash"
+    },
+    "STORAGE_MENU_SMARTCARD": {
+      "text": "SmartCard verwalten",
+      "ref_en": "Manage SmartCard"
+    },
+    "STORAGE_MENU_SD_CARD": {
+      "text": "SD-Karte verwalten",
+      "ref_en": "Manage SD Card"
+    },
+    "LOCKED_MENU_TITLE": {
+      "text": "Gerät gesperrt",
+      "ref_en": "Device Locked"
+    },
+    "LOCKED_MENU_FW_VERSION": {
+      "text": "Firmware-Version: ",
+      "ref_en": "Firmware Version: "
+    },
+    "LOCKED_MENU_ENTER_PIN": {
+      "text": "PIN eingeben zum Entsperren:",
+      "ref_en": "Enter PIN to unlock:"
+    },
+    "ACTION_SCREEN_PREFIX": {
+      "text": "Aktion: ",
+      "ref_en": "Action: "
+    },
+    "ACTION_SCREEN_BACK": {
+      "text": "Zurück",
+      "ref_en": "Back"
+    },
+    "MODAL_CLOSE_BTN": {
+      "text": "Schließen",
+      "ref_en": "Close"
+    },
+    "COMMON_WALLET": {
+      "text": "Wallet",
+      "ref_en": "Wallet"
+    },
+    "COMMON_SINGLESIG": {
+      "text": "SingleSig",
+      "ref_en": "SingleSig"
+    },
+    "COMMON_MULTISIG": {
+      "text": "MultiSig",
+      "ref_en": "MultiSig"
+    },
+    "COMMON_KEYBOARD": {
+      "text": "Tastatur",
+      "ref_en": "Keyboard"
+    },
+    "COMMON_CREATE": {
+      "text": "Erstellen",
+      "ref_en": "Create"
+    },
+    "COMMON_NAME": {
+      "text": "Name",
+      "ref_en": "Name"
+    },
+    "MENU_MANAGE_WALLET": {
+      "text": "Wallet verwalten",
+      "ref_en": "Manage Wallet"
+    },
+    "MENU_MANAGE_SEED": {
+      "text": "Seed verwalten",
+      "ref_en": "Manage Seed"
+    },
+    "MENU_SET_PASSPHRASE": {
+      "text": "Passphrase eingeben/setzen",
+      "ref_en": "Set Passphrase"
+    },
+    "MENU_CONNECT_SW_WALLET": {
+      "text": "Companion App verbinden",
+      "ref_en": "Connect Companion App"
+    },
+    "MENU_SWITCH_ADD_SEED": {
+      "text": "Seed wechseln / hinzufügen",
+      "ref_en": "Switch / Add Seed"
+    },
+    "MENU_SWITCH_ADD_WALLET": {
+      "text": "Wallet wechseln / hinzufügen",
+      "ref_en": "Switch / Add Wallet"
+    },
+    "MENU_ADD_SEED": {
+      "text": "Seed hinzufügen",
+      "ref_en": "Add Seed"
+    },
+    "MENU_ADD_WALLET": {
+      "text": "Wallet hinzufügen",
+      "ref_en": "Add Wallet"
+    },
+    "MENU_MANAGE_BACKUPS": {
+      "text": "Backups verwalten",
+      "ref_en": "Manage Backups"
+    },
+    "MENU_MANAGE_FIRMWARE": {
+      "text": "Firmware verwalten",
+      "ref_en": "Manage Firmware"
+    },
+    "MENU_MANAGE_PREFERENCES": {
+      "text": "Benutzer Einstellungen",
+      "ref_en": "User Preferences"
+    },
+    "MENU_MANAGE_SECURITY": {
+      "text": "Sicherheitsfunktionen",
+      "ref_en": "Security Features"
+    },
+    "MENU_ENABLE_DISABLE_INTERFACES": {
+      "text": "Schnittstellen de-/aktivieren",
+      "ref_en": "En-/Disable Interfaces"
+    },
+    "MENU_MANAGE_STORAGE": {
+      "text": "Speicher verwalten",
+      "ref_en": "Manage Storage"
+    },
+    "MENU_GENERATE_SEEDPHRASE": {
+      "text": "Seedphrase generieren",
+      "ref_en": "Generate Seed"
+    },
+    "MENU_MANAGE_SETTINGS": {
+      "text": "Einstellungen",
+      "ref_en": "Manage Settings"
+    },
+    "MENU_SETTINGS_SECURITY": {
+      "text": "Sicherheitseinstellungen",
+      "ref_en": "Security Settings"
+    },
+    "MENU_LANGUAGE": {
+      "text": "Sprache auswählen",
+      "ref_en": "Select Language"
+    },
+    "MENU_LOAD_NEW_LANGUAGE": {
+      "text": "Neue Sprache laden",
+      "ref_en": "Load New Language"
+    },
+    "HARDWARE_SMARTCARD": {
+      "text": "SmartCard",
+      "ref_en": "SmartCard"
+    },
+    "HARDWARE_SD_CARD": {
+      "text": "SD-Karte",
+      "ref_en": "SD Card"
+    },
+    "HARDWARE_INTERNAL_FLASH": {
+      "text": "interner Flash",
+      "ref_en": "internal Flash"
+    },
+    "HARDWARE_USB": {
+      "text": "USB",
+      "ref_en": "USB"
+    },
+    "HARDWARE_QR_CODE": {
+      "text": "QR-Code",
+      "ref_en": "QR Code"
+    },
+    "TOUR_INTRO": {
+      "text": "Willkommen bei Specter! Diese kurze Tour zeigt dir die wichtigsten Funktionen deiner Hardware-Wallet.",
+      "ref_en": "Welcome to Specter! This quick tour will show you the main features of your hardware wallet."
+    },
+    "TOUR_LANGUAGE": {
+      "text": "Tippe hier, um die Anzeigesprache zu ändern.",
+      "ref_en": "Tap here to change the display language."
+    },
+    "TOUR_LOCK": {
+      "text": "Sperre dein Gerät, wenn du es nicht benutzt. Zum Entsperren brauchst du deine PIN.",
+      "ref_en": "Lock your device when not in use. You'll need your PIN to unlock."
+    },
+    "TOUR_INTERFACES": {
+      "text": "Diese Symbole zeigen verfügbare Schnittstellen: QR-Scanner, USB, SD-Karte und SmartCard.",
+      "ref_en": "These icons show available interfaces: QR scanner, USB, SD card, and SmartCard."
+    },
+    "TOUR_BATTERY": {
+      "text": "Der Batteriestatus wird hier angezeigt, wenn das Gerät mit Batterie läuft.",
+      "ref_en": "Battery status is shown here when running on battery power."
+    },
+    "TOUR_POWER": {
+      "text": "Tippe hier, um die Batteriesimulation ein-/auszuschalten (nur Demo).",
+      "ref_en": "Tap here to toggle battery simulation on/off (demo only)."
+    },
+    "TOUR_WALLET_BAR": {
+      "text": "Deine aktive Wallet-Info erscheint hier. Sie ist leer, bis du eine Wallet erstellst oder importierst.",
+      "ref_en": "Your active wallet info appears here. It's empty until you create or import a wallet."
+    },
+    "TOUR_HELP_ICON": {
+      "text": "Achte auf diese Hilfe-Symbole in der App. Tippe sie an für mehr Details zu jeder Funktion.",
+      "ref_en": "Look for these help icons throughout the app. Tap them for more details about each feature."
+    },
+    "TOUR_SKIP_BTN": {
+      "text": "Tour beenden",
+      "ref_en": "Skip Tour"
+    }
+  }
+}

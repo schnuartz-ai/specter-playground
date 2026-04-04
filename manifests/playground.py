@@ -1,0 +1,6 @@
+# Playground firmware manifest (hardware — includes demo scenarios)
+include('../f469-disco/manifests/disco.py')
+include('mockui-shared.py')
+# Demo/scenario modules (mockui_fw excluded: its boot.py would conflict with boot/main)
+freeze('../scenarios', ('address_navigator.py', 'udisplay_demo.py'))
+freeze('../boot/main')
