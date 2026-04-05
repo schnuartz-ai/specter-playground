@@ -24,6 +24,9 @@ def get_screen_class(screen_id):
         return EnterSeedScreen
 
     # Wallet screens
+    elif screen_id == "wallet_info":
+        from .wallet_info_screen import WalletInfoScreen
+        return WalletInfoScreen
     elif screen_id == "wallet_menu":
         from .wallet_menu import WalletMenu
         return WalletMenu

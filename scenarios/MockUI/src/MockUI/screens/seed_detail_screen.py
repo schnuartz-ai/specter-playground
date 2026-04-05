@@ -68,6 +68,30 @@ class SeedDetailScreen(lv.obj):
             pp_lbl.set_style_text_color(GREEN_HEX, 0)
             pp_lbl.align(lv.ALIGN.RIGHT_MID, 0, 0)
 
+        # Go to Dashboard with this seed
+        dash_btn = lv.button(self)
+        dash_btn.set_size(lv.pct(100), 48)
+        dash_btn.set_style_bg_color(CYAN_HEX, 0)
+        dash_btn.set_style_bg_opa(lv.OPA.COVER, 0)
+        dash_btn.set_style_radius(8, 0)
+        dash_btn.set_style_border_width(0, 0)
+        dash_btn.set_style_shadow_width(0, 0)
+
+        dash_btn.set_layout(lv.LAYOUT.FLEX)
+        dash_btn.set_flex_flow(lv.FLEX_FLOW.ROW)
+        dash_btn.set_flex_align(lv.FLEX_ALIGN.CENTER, lv.FLEX_ALIGN.CENTER, lv.FLEX_ALIGN.CENTER)
+        dash_btn.set_style_pad_column(PAD_SM, 0)
+
+        d_ico = lv.image(dash_btn)
+        BTC_ICONS.HOME(WHITE_HEX).add_to_parent(d_ico, zoom=130)
+
+        d_lbl = lv.label(dash_btn)
+        d_lbl.set_text("Go to Dashboard")
+        d_lbl.set_style_text_font(lv.font_montserrat_16, 0)
+        d_lbl.set_style_text_color(WHITE_HEX, 0)
+
+        dash_btn.add_event_cb(self._go_dashboard, lv.EVENT.CLICKED, None)
+
         # Action options - each is a proper navigable item
         self._add_option("Set Passphrase", BTC_ICONS.PASSWORD, "set_passphrase")
         self._add_option("Show Seed Words", BTC_ICONS.VISIBLE, "show_seed_words")
@@ -115,6 +139,14 @@ class SeedDetailScreen(lv.obj):
         arrow.set_style_text_color(GREY_LIGHT_HEX, 0)
 
         btn.add_event_cb(lambda e, t=target: self._navigate(t), lv.EVENT.CLICKED, None)
+
+    def _go_dashboard(self, e):
+        """Switch to this seed and go to dashboard."""
+        if e.get_code() != lv.EVENT.CLICKED:
+            return
+        self.gui.specter_state.set_active_seed(self.seed)
+        self.gui.ui_state.clear_history()
+        self.gui.show_menu("main")
 
     def _navigate(self, target):
         if target == "delete_seed":

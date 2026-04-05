@@ -1,34 +1,51 @@
-"""Wallet list section: heading + pinned default wallet + sorted wallet rows.
-Creative visual indicators for wallet parameters:
-  - Address type: S (Segwit cyan), L (Legacy orange), T (Taproot green)
-  - Sig type: Single Sig + Native Segwit = no extra symbol (cleanest)
-  - Multi-sig: two-keys icon in orange
-  - Account: small number badge when account > 0
-  - Companion apps: small colored dots
+"""Dashboard wallet list: simple rows with type symbols.
+Click → wallet info page. Long-press → dropdown options.
+Grouping with headers is only shown in the Wallet Menu (wrench), not here.
 """
 import lvgl as lv
 from .ui_consts import (
-    WALLET_SECTION_HEIGHT, SCREEN_WIDTH, WALLET_ROW_HEIGHT, WALLET_ICON_SIZE,
+    WALLET_SECTION_HEIGHT, SCREEN_WIDTH, WALLET_ROW_HEIGHT,
     PAD_SM, PAD_MD, PAD_XS,
     BG_BLACK_HEX, BG_CARD_HEX, BG_ELEVATED_HEX,
-    WHITE_HEX, GREY_LIGHT_HEX, CYAN_HEX, CYAN_DARK_HEX,
-    ORANGE_HEX, GREEN_HEX, GREY_HEX, RED_HEX,
+    WHITE_HEX, GREY_LIGHT_HEX, CYAN_HEX,
+    ORANGE_HEX, GREEN_HEX, GREY_HEX,
 )
 from .symbol_lib import BTC_ICONS
 from ..stubs.wallet import ADDR_NATIVE_SEGWIT, ADDR_LEGACY, ADDR_TAPROOT, ADDR_NESTED_SEGWIT
-from .keyboard_manager import Layout
+
+
+# Short type symbols for dashboard display
+_TYPE_SYMBOLS = {
+    # (isMultiSig, address_type, is_standard) → (symbol, color)
+}
+
+
+def _get_type_symbol(wallet):
+    """Return (symbol_text, color) for a wallet's type indicator."""
+    if not wallet.is_standard():
+        return ("MS", ORANGE_HEX)  # Miniskript
+    if wallet.isMultiSig:
+        return None  # use TWO_KEYS icon instead
+    if wallet.address_type == ADDR_LEGACY:
+        return ("L", ORANGE_HEX)
+    if wallet.address_type == ADDR_TAPROOT:
+        return ("T", GREEN_HEX)
+    if wallet.address_type == ADDR_NESTED_SEGWIT:
+        return ("nS", CYAN_HEX)
+    # Native Segwit single sig = cleanest, no symbol
+    return None
 
 
 def _wallet_sort_key(wallet):
-    """Sort: single-sig first, then by address type, then account."""
     sig = 1 if wallet.isMultiSig else 0
+    custom = 0 if wallet.is_standard() else 2
     addr_order = {ADDR_NATIVE_SEGWIT: 0, ADDR_NESTED_SEGWIT: 1, ADDR_LEGACY: 2, ADDR_TAPROOT: 3}
     addr = addr_order.get(wallet.address_type, 0)
-    return (sig, addr, wallet.account)
+    return (custom, sig, addr, wallet.account)
 
 
 class WalletList(lv.obj):
-    """Wallet section with heading, wrench icon, and scrollable wallet rows."""
+    """Dashboard wallet list. Simple rows with type symbols."""
 
     def __init__(self, gui):
         super().__init__(gui)
@@ -44,7 +61,7 @@ class WalletList(lv.obj):
         self.set_style_pad_top(PAD_SM, 0)
         self.set_style_pad_bottom(0, 0)
 
-        # Header row
+        # Header: "Wallets" + wrench
         header = lv.obj(self)
         header.set_size(SCREEN_WIDTH - 2 * PAD_MD, 28)
         header.set_style_bg_opa(lv.OPA.TRANSP, 0)
@@ -57,7 +74,6 @@ class WalletList(lv.obj):
         title.set_style_text_color(WHITE_HEX, 0)
         title.align(lv.ALIGN.LEFT_MID, 0, 0)
 
-        # Wrench icon → Wallet Menu
         wrench_btn = lv.button(header)
         wrench_btn.set_size(32, 32)
         wrench_btn.set_style_bg_opa(lv.OPA.TRANSP, 0)
@@ -66,17 +82,17 @@ class WalletList(lv.obj):
         wrench_btn.align(lv.ALIGN.RIGHT_MID, 0, 0)
 
         wrench_ico = lv.image(wrench_btn)
-        BTC_ICONS.GEAR(GREY_LIGHT_HEX).add_to_parent(wrench_ico, zoom=160)
+        BTC_ICONS.EDIT(GREY_LIGHT_HEX).add_to_parent(wrench_ico, zoom=150)
         wrench_ico.center()
         wrench_btn.add_event_cb(self._wrench_cb, lv.EVENT.CLICKED, None)
 
-        # Scrollable wallet rows
+        # Scrollable rows
         self.wallet_container = lv.obj(self)
         self.wallet_container.set_size(SCREEN_WIDTH - 2 * PAD_MD, WALLET_SECTION_HEIGHT - 36)
         self.wallet_container.set_style_bg_opa(lv.OPA.TRANSP, 0)
         self.wallet_container.set_style_border_width(0, 0)
         self.wallet_container.set_style_pad_all(0, 0)
-        self.wallet_container.set_style_pad_row(PAD_XS, 0)
+        self.wallet_container.set_style_pad_row(2, 0)
         self.wallet_container.set_layout(lv.LAYOUT.FLEX)
         self.wallet_container.set_flex_flow(lv.FLEX_FLOW.COLUMN)
         self.wallet_container.align_to(header, lv.ALIGN.OUT_BOTTOM_LEFT, 0, PAD_XS)
@@ -95,30 +111,21 @@ class WalletList(lv.obj):
             return
 
         wallets = state.wallets_for_seed(state.active_seed) or []
-        default_w = None
-        others = []
-        for w in wallets:
-            if w.is_default_wallet():
-                default_w = w
-            else:
-                others.append(w)
-
+        others = [w for w in wallets if not w.is_default_wallet()]
         others.sort(key=_wallet_sort_key)
 
-        if default_w:
-            self._add_row(default_w, is_default=True)
         for w in others:
-            self._add_row(w, is_default=False)
+            self._add_row(w)
 
-    def _add_row(self, wallet, is_default=False):
+    def _add_row(self, wallet):
         state = self.gui.specter_state
         is_active = state.active_wallet is wallet
 
         row = lv.button(self.wallet_container)
-        row.set_size(lv.pct(100), WALLET_ROW_HEIGHT)
+        row.set_size(lv.pct(100), 38)
         row.set_style_bg_color(BG_CARD_HEX, 0)
         row.set_style_bg_opa(lv.OPA.COVER, 0)
-        row.set_style_radius(8, 0)
+        row.set_style_radius(6, 0)
         row.set_style_shadow_width(0, 0)
         row.set_style_pad_left(PAD_SM, 0)
         row.set_style_pad_right(PAD_SM, 0)
@@ -134,36 +141,22 @@ class WalletList(lv.obj):
         row.set_flex_align(lv.FLEX_ALIGN.START, lv.FLEX_ALIGN.CENTER, lv.FLEX_ALIGN.CENTER)
         row.set_style_pad_column(PAD_XS, 0)
 
-        # === Parameter indicators (only for non-default, non-cleanest) ===
-        if not is_default:
-            # Address type badge — Single Sig + Native Segwit gets NO badge (cleanest)
-            needs_addr_badge = wallet.address_type != ADDR_NATIVE_SEGWIT
-            needs_ms_badge = wallet.isMultiSig
-            needs_acc_badge = wallet.account > 0
+        # Type symbol
+        sym = _get_type_symbol(wallet)
+        if wallet.isMultiSig:
+            ms_ico = lv.image(row)
+            BTC_ICONS.TWO_KEYS(ORANGE_HEX).add_to_parent(ms_ico, zoom=90)
+        elif sym:
+            sym_lbl = lv.label(row)
+            sym_lbl.set_text(sym[0])
+            sym_lbl.set_style_text_font(lv.font_montserrat_12, 0)
+            sym_lbl.set_style_text_color(sym[1], 0)
 
-            if needs_ms_badge:
-                ms_ico = lv.image(row)
-                BTC_ICONS.TWO_KEYS(ORANGE_HEX).add_to_parent(ms_ico, zoom=110)
-
-            if needs_addr_badge:
-                addr_lbl = lv.label(row)
-                if wallet.address_type == ADDR_LEGACY:
-                    addr_lbl.set_text("L")
-                    addr_lbl.set_style_text_color(ORANGE_HEX, 0)
-                elif wallet.address_type == ADDR_TAPROOT:
-                    addr_lbl.set_text("T")
-                    addr_lbl.set_style_text_color(GREEN_HEX, 0)
-                elif wallet.address_type == ADDR_NESTED_SEGWIT:
-                    addr_lbl.set_text("nS")
-                    addr_lbl.set_style_text_color(CYAN_HEX, 0)
-                addr_lbl.set_style_text_font(lv.font_montserrat_12, 0)
-
-            if needs_acc_badge:
-                acc_lbl = lv.label(row)
-                acc_lbl.set_text(str(wallet.account))
-                acc_lbl.set_style_text_font(lv.font_montserrat_12, 0)
-                acc_lbl.set_style_text_color(CYAN_HEX, 0)
-                acc_lbl.set_style_text_opa(lv.OPA._70, 0)
+        # Account badge
+        acc_lbl = lv.label(row)
+        acc_lbl.set_text("Acc" + str(wallet.account))
+        acc_lbl.set_style_text_font(lv.font_montserrat_12, 0)
+        acc_lbl.set_style_text_color(CYAN_HEX, 0)
 
         # Wallet name
         name_lbl = lv.label(row)
@@ -172,27 +165,24 @@ class WalletList(lv.obj):
         name_lbl.set_style_text_color(WHITE_HEX, 0)
         name_lbl.set_flex_grow(1)
 
-        # Companion app dots (colored circles for each shared app)
+        # Companion app logos (actual icons)
         if wallet.shared_with:
             for i, app in enumerate(wallet.shared_with):
-                if i >= 3:
-                    break  # max 3 dots to save space
-                dot = lv.label(row)
-                dot.set_text("\xE2\x97\x8F")  # bullet
-                dot.set_style_text_font(lv.font_montserrat_12, 0)
-                dot.set_style_text_color(GREEN_HEX, 0)
-        elif wallet.has_been_exported:
-            ico = lv.image(row)
-            BTC_ICONS.SHARE(GREEN_HEX).add_to_parent(ico, zoom=100)
+                if i >= 2:
+                    break
+                app_ico = lv.image(row)
+                icon = _get_app_icon(app)
+                if icon:
+                    icon.add_to_parent(app_ico, zoom=70)
 
-        # Click to select
-        row.add_event_cb(lambda e, w=wallet: self._select(w), lv.EVENT.CLICKED, None)
-        # Long-press for details
+        # Click → wallet info page
+        row.add_event_cb(lambda e, w=wallet: self._open_wallet(w), lv.EVENT.CLICKED, None)
+        # Long-press → dropdown options
         row.add_event_cb(lambda e, w=wallet: self._long_press(w), lv.EVENT.LONG_PRESSED, None)
 
-    def _select(self, wallet):
+    def _open_wallet(self, wallet):
         self.gui.specter_state.set_active_wallet(wallet)
-        self.refresh()
+        self.gui.show_menu("wallet_info")
 
     def _long_press(self, wallet):
         self.gui.specter_state.set_active_wallet(wallet)
@@ -201,3 +191,22 @@ class WalletList(lv.obj):
     def _wrench_cb(self, e):
         if e.get_code() == lv.EVENT.CLICKED:
             self.gui.show_menu("wallet_menu")
+
+
+def _get_app_icon(app_name):
+    """Return the BTC_ICONS icon for a companion app, or None."""
+    name = app_name.lower()
+    if "sparrow" in name:
+        return BTC_ICONS.SPARROW
+    if "nunchuk" in name:
+        return BTC_ICONS.NUNCHUK
+    if "keeper" in name:
+        return BTC_ICONS.BITCOIN_KEEPER
+    if "safe" in name:
+        return BTC_ICONS.BITCOIN_SAFE
+    if "specter" in name:
+        return BTC_ICONS.SPECTER_LOGO_HIGH_QUALITY_KLEINER
+    if "electrum" in name:
+        return BTC_ICONS.ELECTRUM_LOGO
+    # Fallback: generic link icon
+    return BTC_ICONS.LINK(GREEN_HEX)

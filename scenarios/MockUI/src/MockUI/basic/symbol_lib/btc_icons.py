@@ -1,4 +1,4 @@
-"""Bitcoin icon library aggregator — 126 icons at 42×42 px.
+"""Bitcoin icon library aggregator — 132 icons at 42×42 px.
 
 AUTO-GENERATED — do not edit directly.
 Regenerate with:
@@ -21,6 +21,8 @@ from .icons.arrow_up import ARROW_UP
 from .icons.bell import BELL
 from .icons.bitcoin import BITCOIN
 from .icons.bitcoin_circle import BITCOIN_CIRCLE
+from .icons.bitcoin_keeper import BITCOIN_KEEPER
+from .icons.bitcoin_safe import BITCOIN_SAFE
 from .icons.block import BLOCK
 from .icons.brush import BRUSH
 from .icons.buoy import BUOY
@@ -53,6 +55,7 @@ from .icons.credit_card import CREDIT_CARD
 from .icons.cross import CROSS
 from .icons.devices import DEVICES
 from .icons.edit import EDIT
+from .icons.electrum_logo import ELECTRUM_LOGO
 from .icons.ellipsis import ELLIPSIS
 from .icons.exchange import EXCHANGE
 from .icons.exit import EXIT
@@ -93,6 +96,7 @@ from .icons.node_1_connection import NODE_1_CONNECTION
 from .icons.node_2_connections import NODE_2_CONNECTIONS
 from .icons.node_3_connections import NODE_3_CONNECTIONS
 from .icons.node_hardware import NODE_HARDWARE
+from .icons.nunchuk import NUNCHUK
 from .icons.pantheon import PANTHEON
 from .icons.password import PASSWORD
 from .icons.photo import PHOTO
@@ -123,6 +127,8 @@ from .icons.sign import SIGN
 from .icons.smartcard import SMARTCARD
 from .icons.snowflake import SNOWFLAKE
 from .icons.sofa import SOFA
+from .icons.sparrow import SPARROW
+from .icons.specter_logo_high_quality_kleiner import SPECTER_LOGO_HIGH_QUALITY_KLEINER
 from .icons.star import STAR
 from .icons.sun import SUN
 from .icons.tag import TAG
@@ -141,7 +147,7 @@ from .icons.wallet import WALLET
 
 class BTC_ICONS:
     """
-    Library of Bitcoin-themed icons (126 total, 42×42 px).
+    Library of Bitcoin-themed icons (132 total, 42×42 px).
 
     Icons default to white; pass a color to tint them:
         BTC_ICONS.WALLET(lv.color_hex(0xFF0000))  # red
@@ -158,6 +164,8 @@ class BTC_ICONS:
     BELL = BELL
     BITCOIN = BITCOIN
     BITCOIN_CIRCLE = BITCOIN_CIRCLE
+    BITCOIN_KEEPER = BITCOIN_KEEPER
+    BITCOIN_SAFE = BITCOIN_SAFE
     BLOCK = BLOCK
     BRUSH = BRUSH
     BUOY = BUOY
@@ -190,6 +198,7 @@ class BTC_ICONS:
     CROSS = CROSS
     DEVICES = DEVICES
     EDIT = EDIT
+    ELECTRUM_LOGO = ELECTRUM_LOGO
     ELLIPSIS = ELLIPSIS
     EXCHANGE = EXCHANGE
     EXIT = EXIT
@@ -230,6 +239,7 @@ class BTC_ICONS:
     NODE_2_CONNECTIONS = NODE_2_CONNECTIONS
     NODE_3_CONNECTIONS = NODE_3_CONNECTIONS
     NODE_HARDWARE = NODE_HARDWARE
+    NUNCHUK = NUNCHUK
     PANTHEON = PANTHEON
     PASSWORD = PASSWORD
     PHOTO = PHOTO
@@ -260,6 +270,8 @@ class BTC_ICONS:
     SMARTCARD = SMARTCARD
     SNOWFLAKE = SNOWFLAKE
     SOFA = SOFA
+    SPARROW = SPARROW
+    SPECTER_LOGO_HIGH_QUALITY_KLEINER = SPECTER_LOGO_HIGH_QUALITY_KLEINER
     STAR = STAR
     SUN = SUN
     TAG = TAG

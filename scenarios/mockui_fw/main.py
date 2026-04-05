@@ -16,7 +16,7 @@ else:
 
 from MockUI import SpecterGui, SpecterState
 from MockUI.stubs.seed import Seed
-from MockUI.stubs.wallet import Wallet, ADDR_NATIVE_SEGWIT, ADDR_LEGACY, ADDR_NESTED_SEGWIT
+from MockUI.stubs.wallet import Wallet, ADDR_NATIVE_SEGWIT, ADDR_LEGACY, ADDR_NESTED_SEGWIT, ADDR_TAPROOT
 
 gc.collect()
 
@@ -93,8 +93,28 @@ wallet_pocket = Wallet(
 wallet_pocket.shared_with = ["Specter Desktop", "Sparrow"]
 specter_state.register_wallet(wallet_pocket)
 
+wallet_p2p = Wallet(
+    label="P2P",
+    descriptor="tr([a1b2c3d4/86'/0'/0']xpub...)",
+    isMultiSig=False, net="mainnet",
+    required_fingerprints=["a1b2c3d4"],
+    address_type=ADDR_TAPROOT,
+    account=0,
+)
+specter_state.register_wallet(wallet_p2p)
+
+wallet_nokyc2 = Wallet(
+    label="No KYC Bisq",
+    descriptor="wpkh([a1b2c3d4/84'/0'/2']xpub...)",
+    isMultiSig=False, net="mainnet",
+    required_fingerprints=["a1b2c3d4"],
+    address_type=ADDR_NATIVE_SEGWIT,
+    account=2,
+)
+specter_state.register_wallet(wallet_nokyc2)
+
 wallet_multisig = Wallet(
-    label="Multi Sig Escrow",
+    label="Mein Unternehmen",
     descriptor="wsh(multi(2,[a1b2c3d4]xpub...,[e5f6a7b8]xpub...))",
     isMultiSig=True, net="mainnet",
     threshold=2,
@@ -105,6 +125,16 @@ wallet_multisig = Wallet(
 )
 wallet_multisig.shared_with = ["Nunchuk"]
 specter_state.register_wallet(wallet_multisig)
+
+wallet_liana = Wallet(
+    label="Liana Vererbungswallet",
+    descriptor="fancy script",
+    isMultiSig=False, net="mainnet",
+    required_fingerprints=["a1b2c3d4"],
+    address_type=ADDR_NATIVE_SEGWIT,
+    account=0,
+)
+specter_state.register_wallet(wallet_liana)
 
 specter_state.set_active_seed(seed_main)
 
