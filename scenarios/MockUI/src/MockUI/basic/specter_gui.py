@@ -33,7 +33,10 @@ _HW_EASE_OUT_QUINT         = 4
 # it. Change this single line to retune the feel of the whole UI.
 _HW_EASING_DEFAULT = _HW_EASE_IN_OUT_CUBIC
 
-from .utils.ui_consts import SCREEN_HEIGHT, SCREEN_WIDTH, CONTENT_PCT, anim_duration_ms, GUI_REFRESH_MS, TITLE_ROW_HEIGHT
+from .utils.ui_consts import (
+    SCREEN_HEIGHT, SCREEN_WIDTH, CONTENT_PCT, anim_duration_ms,
+    GUI_REFRESH_MS, TITLE_ROW_HEIGHT, BG_HEX, WHITE_HEX,
+)
 from ..stubs import DeviceState
 from .ui_state import UIState, Context
 from .i18n import I18nManager
@@ -112,9 +115,18 @@ class SpecterGui(lv.obj):
 
     def __init__(self, specter_state=None, ui_state=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        configure_as_bare(self, width=SCREEN_WIDTH, height=SCREEN_HEIGHT, transparent_bg=False)
+        self.set_style_bg_color(BG_HEX, 0)
+        self.set_style_text_color(WHITE_HEX, 0)
         self.set_scroll_dir(lv.DIR.NONE)
 
         self.on_navigate = self.navigate_to
+
+        self._backdrop = lv.obj(self)
+        configure_as_bare(self._backdrop, width=SCREEN_WIDTH, height=SCREEN_HEIGHT, transparent_bg=False)
+        self._backdrop.set_style_bg_color(BG_HEX, 0)
+        self._backdrop.remove_flag(lv.obj.FLAG.CLICKABLE)
+        self._backdrop.align(lv.ALIGN.CENTER, 0, 0)
 
         # Initialize i18n manager
         self.i18n = I18nManager()
@@ -138,10 +150,12 @@ class SpecterGui(lv.obj):
 
         # Build the initial screen for the current ui_state menu
         self.screen = self._make_screen()
+        self.screen.move_foreground()
 
         # Navigation bar at bottom — always present, owned by SpecterGui
         self.navigation_bar = NavigationBar(self)
         self.navigation_bar.align(lv.ALIGN.BOTTOM_MID, 0, 0)
+        self.navigation_bar.move_foreground()
 
         # Start guided tour on first startup (after UI is fully constructed)
         if self.ui_state.is_run_tour_on_startup:
@@ -203,6 +217,8 @@ class SpecterGui(lv.obj):
             if self.screen:
                 self.screen.delete()
             self.screen = self._make_screen()
+            self.screen.move_foreground()
+            self.navigation_bar.move_foreground()
             self.refresh_ui()
 
         if self.ui_state.current_menu_id == "start_intro_tour":

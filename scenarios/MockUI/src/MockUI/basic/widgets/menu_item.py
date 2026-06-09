@@ -42,7 +42,7 @@ class MenuItem:
 
     def __init__(self, icon=None, text=None, target=None,
                  color=None, size=None, help_key=None, suffix=None, is_submenu=False,
-                 font_color=None, get_value=None, set_value=None):
+                 font_color=None, get_value=None, set_value=None, width_pct=100):
         self.icon = icon
         self.text = text
         self.target = target
@@ -56,6 +56,7 @@ class MenuItem:
         self.font_color = font_color
         self.get_value = get_value
         self.set_value = set_value
+        self.width_pct = width_pct
 
 
 class MenuItemSuffix:

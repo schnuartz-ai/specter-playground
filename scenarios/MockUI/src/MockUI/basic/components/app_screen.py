@@ -11,6 +11,7 @@ import lvgl as lv
 
 from ..utils.ui_consts import (
     SCREEN_WIDTH, SCREEN_HEIGHT, CONTENT_PCT, TITLE_ROW_HEIGHT, BATTERY_WIDTH,
+    BG_HEX,
 )
 from ..templates.specter_gui_base import SpecterGuiElement
 from ..utils.ui_utils import configure_as_bare
@@ -30,7 +31,7 @@ class AppScreen(SpecterGuiElement):
         super().__init__(gui)   # LVGL parent = SpecterGui
         self.gui = gui
 
-        configure_as_bare(self, width=SCREEN_WIDTH, height=_CONTENT_H, transparent_bg=False)
+        configure_as_bare(self, width=SCREEN_WIDTH, height=_CONTENT_H, transparent_bg=True)
         self.set_pos(0, 0)
         self.set_layout(lv.LAYOUT.NONE)
         self.set_scroll_dir(lv.DIR.NONE)

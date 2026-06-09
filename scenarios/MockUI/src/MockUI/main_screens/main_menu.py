@@ -8,6 +8,10 @@ from ..basic.widgets import MenuItem
 
 class MainMenu(GenericMenu):
     TITLE_KEY = "MAIN_MENU_TITLE"
+    SHOW_TITLE = False
+    NO_TITLE_SPACER = True
+    ROW_HEIGHT = 78
+    ROW_GAP = 14
 
     def get_menu_items(self, t, state):
         has_seed = state and len(state.loaded_seeds) > 0
@@ -19,21 +23,13 @@ class MainMenu(GenericMenu):
         
     def _items_no_seed(self, t, state):
         """State: No Seed loaded yet — focus on key loading."""
-        slots_available = 7
-        slots_used = 2 + int(state.SmartCard_hasSeed()) + int(state.SD_hasSeed()) + int(state.Flash_hasSeed() + int(state.QR_enabled()))
-        slots_remaining = slots_available - slots_used
-
-        Seed_detected = (state.SmartCard_hasSeed() or state.SD_hasSeed() or state.Flash_hasSeed())
-
-        # Size each row based on remaining slots / detected seeds.
-        scaled = 1.0 + slots_remaining / slots_used if not Seed_detected else 1
-        gen_size = scaled
+        gen_size = 1
         sizes = {
-            "smartcard": 1.0 + slots_remaining,
-            "qr": scaled,
-            "keyboard": scaled,
-            "sd": 1.0 + slots_remaining if not state.SmartCard_hasSeed() else 1,
-            "flash": 1.0 + slots_remaining if not (state.SmartCard_hasSeed() or state.SD_hasSeed()) else 1,
+            "smartcard": 2.45,
+            "qr": 1,
+            "keyboard": 1,
+            "sd": 1,
+            "flash": 1,
         }
         return make_add_seed_items(t, state, sizes=sizes, generate_size=gen_size)
 

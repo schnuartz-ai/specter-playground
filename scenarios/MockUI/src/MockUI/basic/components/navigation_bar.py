@@ -26,7 +26,7 @@ lazily on the first open and destroyed once both drop-ups are closed.
 import lvgl as lv
 from ..utils.ui_consts import (
     SCREEN_WIDTH, SCREEN_HEIGHT, STATUS_BTN_HEIGHT, STATUS_BAR_PCT,
-    DEFAULT_MODAL_BG_OPA
+    DEFAULT_MODAL_BG_OPA, CARD_HEX, BLUE_HEX, WHITE_HEX
 )
 from ..symbol_lib import BTC_ICONS
 from ..widgets.btn import Btn
@@ -65,6 +65,8 @@ class NavigationBar(SpecterGuiElement):
 
         # ── Bar container style ───────────────────────────────────────────────
         configure_as_bare(self, width=lv.pct(100), height=lv.pct(STATUS_BAR_PCT))
+        self.set_style_bg_color(CARD_HEX, 0)
+        self.set_style_bg_opa(lv.OPA.COVER, 0)
         self.set_layout(lv.LAYOUT.NONE)   # absolute child positioning
         self.set_scroll_dir(lv.DIR.NONE)
 
@@ -194,24 +196,24 @@ class NavigationBar(SpecterGuiElement):
 
             # Home icon: filled only when on main and no dropup is open
             if self.current_menu == "main" and not seed_open and not wallet_open:
-                self.buttons["Home"].update_icon(BTC_ICONS.HOME)
+                self.buttons["Home"].update_icon(BTC_ICONS.HOME(BLUE_HEX))
             else:
-                self.buttons["Home"].update_icon(BTC_ICONS.HOME_OUTLINE)
+                self.buttons["Home"].update_icon(BTC_ICONS.HOME_OUTLINE(WHITE_HEX))
             self.buttons["Home"].set_visible(True)  # Home is always visible when not locked
 
             # Seed icon: filled when dropup open OR when in a seed menu
             if (self.context == Context.SEED and not wallet_open) or seed_open:
-                self.buttons["Seed"].update_icon(BTC_ICONS.KEY)
+                self.buttons["Seed"].update_icon(BTC_ICONS.KEY(BLUE_HEX))
             else:
-                self.buttons["Seed"].update_icon(BTC_ICONS.KEY_OUTLINE)
+                self.buttons["Seed"].update_icon(BTC_ICONS.KEY_OUTLINE(WHITE_HEX))
             #Seed icon: invisible when no seed loaded
             self.buttons["Seed"].set_visible(self.gui.device_state and len(self.gui.device_state.loaded_seeds) > 0)
 
             # Wallet icon: filled when dropup open OR when in a wallet menu
             if (self.context == Context.WALLET and not seed_open) or wallet_open:
-                self.buttons["Wallet"].update_icon(BTC_ICONS.WALLET)
+                self.buttons["Wallet"].update_icon(BTC_ICONS.WALLET(BLUE_HEX))
             else:
-                self.buttons["Wallet"].update_icon(BTC_ICONS.WALLET_OUTLINE)
+                self.buttons["Wallet"].update_icon(BTC_ICONS.WALLET_OUTLINE(WHITE_HEX))
             #Wallet icon: invisible when no seed loaded
             self.buttons["Wallet"].set_visible(
                 self.gui.device_state and 
@@ -221,9 +223,9 @@ class NavigationBar(SpecterGuiElement):
 
             # Device icon
             if self.context == Context.DEVICE and not seed_open and not wallet_open:
-                self.buttons["Device"].update_icon(BTC_ICONS.GEAR)
+                self.buttons["Device"].update_icon(BTC_ICONS.GEAR(BLUE_HEX))
             else:
-                self.buttons["Device"].update_icon(BTC_ICONS.GEAR_OUTLINE)
+                self.buttons["Device"].update_icon(BTC_ICONS.GEAR_OUTLINE(WHITE_HEX))
             self.buttons["Device"].set_visible(True)  # Device is always visible when not locked
 
             # Rebuild drop-up card lists if open (e.g. after passphrase/wallet state change)

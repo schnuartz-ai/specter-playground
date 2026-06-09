@@ -14,7 +14,7 @@ Proxy: all lv.button methods are accessible directly on Btn instances (e.g. btn.
 
 import lvgl as lv
 from ..symbol_lib import Icon
-from ..utils.ui_consts import TEXT_FONT
+from ..utils.ui_consts import TEXT_FONT, CARD_HEX, WHITE_HEX, BLUE_HEX
 from ..utils.ui_utils import configure_flex, to_lv_color
 
 
@@ -36,6 +36,19 @@ class Btn:
     def __init__(self, parent, icon=None, text=None, color=None, size=None,
                  callback=None, font=TEXT_FONT, fontcolor=None):
         self._btn = lv.button(parent)
+        try:
+            self._btn.remove_style_all()
+        except AttributeError:
+            pass
+        bg_color = color if color is not None else CARD_HEX
+        self._btn.set_style_bg_color(bg_color, lv.PART.MAIN)
+        self._btn.set_style_bg_opa(lv.OPA.COVER, lv.PART.MAIN)
+        self._btn.set_style_radius(18, lv.PART.MAIN)
+        self._btn.set_style_border_width(0, lv.PART.MAIN)
+        self._btn.set_style_shadow_width(0, lv.PART.MAIN)
+        self._btn.set_style_pad_left(18, lv.PART.MAIN)
+        self._btn.set_style_pad_right(18, lv.PART.MAIN)
+        self._btn.set_style_text_color(WHITE_HEX, lv.PART.MAIN)
 
         if size is not None:
             w, h = size
@@ -44,9 +57,6 @@ class Btn:
             if h is not None:
                 self._btn.set_height(h)
 
-        if color is not None:
-            self._btn.set_style_bg_color(color, lv.PART.MAIN)
-
         # If both icon and text: flex row so they sit side by side
         if icon is not None and text is not None:
             self._btn.set_layout(lv.LAYOUT.FLEX)
@@ -54,8 +64,8 @@ class Btn:
 
         if icon is not None:
             self._ico_img = lv.image(self._btn)
-            icon(to_lv_color(fontcolor))
-            icon.apply_icon_to(self._ico_img)
+            resolved_icon = icon(to_lv_color(fontcolor if fontcolor is not None else WHITE_HEX))
+            resolved_icon.apply_icon_to(self._ico_img)
             if text is None:
                 self._ico_img.center()
         else:
@@ -65,8 +75,7 @@ class Btn:
             self.lbl = lv.label(self._btn)
             self.lbl.set_text(text)
             self.lbl.set_style_text_font(font, 0)
-            if fontcolor is not None:
-                self.lbl.set_style_text_color(to_lv_color(fontcolor), 0)
+            self.lbl.set_style_text_color(to_lv_color(fontcolor if fontcolor is not None else WHITE_HEX), 0)
             if icon is None:
                 self.lbl.center()
         else:
@@ -88,6 +97,10 @@ class Btn:
         self._btn.set_style_bg_opa(lv.OPA.TRANSP, 0)
         self._btn.set_style_shadow_width(0, 0)
         self._btn.set_style_border_width(0, 0)
+        return self
+
+    def make_accent(self):
+        self._btn.set_style_bg_color(BLUE_HEX, lv.PART.MAIN)
         return self
 
     def set_visible(self, visible):

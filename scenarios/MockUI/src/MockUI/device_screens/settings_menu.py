@@ -2,19 +2,25 @@ import lvgl as lv
 from ..basic.templates.menu import GenericMenu
 from ..basic.symbol_lib import BTC_ICONS
 from ..basic.widgets import MenuItem
-from ..basic.utils.ui_consts import BTC_ICON_WIDTH, STATUS_BTN_HEIGHT, GREEN_HEX, WHITE_HEX, GREY_HEX
+from ..basic.utils.ui_consts import (
+    BTC_ICON_WIDTH, STATUS_BTN_HEIGHT, GREEN_HEX, WHITE_HEX, GREY_HEX,
+    BLUE_HEX,
+)
 from ..basic.widgets.icon_widgets import make_icon
 from ..basic.widgets.containers import flex_row
 
 
 class SettingsMenu(GenericMenu):
     TITLE_KEY = "MENU_MANAGE_SETTINGS"
+    ROW_HEIGHT = 78
+    ROW_GAP = 10
 
     def pre_init(self, t, state):
         self._build_iface_row(state)
 
     def _build_iface_row(self, state):
-        row = flex_row(self.body, width=lv.pct(100), height=STATUS_BTN_HEIGHT, main_align=lv.FLEX_ALIGN.CENTER)
+        row = flex_row(self.body, width=lv.pct(100), height=64, main_align=lv.FLEX_ALIGN.CENTER)
+        row.set_style_pad_column(22, 0)
 
         def _add_ico(icon, color):
             img = make_icon(row, icon, color)
@@ -32,6 +38,19 @@ class SettingsMenu(GenericMenu):
             col = (GREEN_HEX if state.SmartCard_detected() else WHITE_HEX) if state.SmartCard_enabled() else GREY_HEX
             _add_ico(BTC_ICONS.SMARTCARD, col)
 
+        underline = lv.obj(row)
+        try:
+            underline.remove_style_all()
+        except AttributeError:
+            pass
+        underline.set_size(58, 4)
+        underline.set_style_bg_color(BLUE_HEX, 0)
+        underline.set_style_bg_opa(lv.OPA.COVER, 0)
+        underline.set_style_radius(2, 0)
+        underline.set_style_border_width(0, 0)
+        underline.add_flag(lv.obj.FLAG.FLOATING)
+        underline.align(lv.ALIGN.BOTTOM_LEFT, 88, 0)
+
     def _iface_ico_cb(self, e):
         if e.get_code() == lv.EVENT.CLICKED:
             self.gui.navigate_to("interfaces")
@@ -46,3 +65,7 @@ class SettingsMenu(GenericMenu):
             MenuItem(BTC_ICONS.CONTACTS, t("MENU_MANAGE_PREFERENCES"), "manage_preferences", is_submenu=True),
             MenuItem(BTC_ICONS.GLOBE, lang_label, "select_language", is_submenu=True),
         ]
+
+    def _configure_scroll(self):
+        self.body.set_scroll_dir(lv.DIR.NONE)
+        self.body.set_scrollbar_mode(lv.SCROLLBAR_MODE.OFF)

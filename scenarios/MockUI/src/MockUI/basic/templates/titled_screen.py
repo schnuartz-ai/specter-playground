@@ -26,7 +26,7 @@ Layout variants (absolute, no flex on root):
 import lvgl as lv
 from ..utils.ui_consts import (
     TITLE_ROW_HEIGHT, TITLE_PADDING, SCREEN_HEIGHT, CONTENT_PCT,
-    TITLE_FONT, SMALL_PAD, RED_HEX,
+    TITLE_FONT, SMALL_PAD, RED_HEX, WHITE_HEX,
 )
 from ..widgets.labels import body_label
 from ..widgets.containers import bare_strip
@@ -66,7 +66,7 @@ class TitledScreen(SpecterGuiElement):
         self.gui = getattr(parent, "gui", parent)
 
         # Root: fill parent completely, no decoration.
-        configure_as_bare(self, width=lv.pct(100), height=lv.pct(100), transparent_bg=False)
+        configure_as_bare(self, width=lv.pct(100), height=lv.pct(100), transparent_bg=True)
         self.set_scroll_dir(lv.DIR.NONE)
 
         y_body = 0  # accumulated y-offset for the body widget
@@ -75,19 +75,25 @@ class TitledScreen(SpecterGuiElement):
         self.title_bar = None
         self.title = None
         if show_title:
-            self.title_bar = bare_strip(self, TITLE_ROW_HEIGHT, 0, False)
+            self.title_bar = bare_strip(self, TITLE_ROW_HEIGHT, 0, True)
             self.title = body_label(self.title_bar, title, font=TITLE_FONT)
+            self.title.set_style_text_color(WHITE_HEX, 0)
             self.title.align(lv.ALIGN.CENTER, 0, 0)
             y_body = TITLE_ROW_HEIGHT + TITLE_PADDING
         else:
             # No title strip — place an invisible spacer so the battery widget
             # (floating above content at y=0) doesn't overlap body content.
-            self.spacer = bare_strip(self, TITLE_ROW_HEIGHT, 0, False)
-            y_body = TITLE_ROW_HEIGHT
+            if getattr(self, "NO_TITLE_SPACER", False):
+                y_body = 0
+            else:
+                self.spacer = bare_strip(self, TITLE_ROW_HEIGHT, 0, True)
+                y_body = TITLE_ROW_HEIGHT
 
         # ── 2. Body ───────────────────────────────────────────────────────────
         content_h = SCREEN_HEIGHT * CONTENT_PCT // 100
         self.body = bare_strip(self, content_h - y_body, y_body)
+        self.body.set_style_pad_left(18, 0)
+        self.body.set_style_pad_right(18, 0)
         # Disable scrolling on body; subclasses can re-enable via set_scroll_dir.
         self.body.set_scroll_dir(lv.DIR.NONE)
 

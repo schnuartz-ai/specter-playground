@@ -5,6 +5,7 @@ without risk of circular imports.
 """
 import lvgl as lv
 import rng  # TODO: clarify if this should be encapsulated in a general HW/GUI interface
+from .ui_consts import BG_HEX, WHITE_HEX
 
 
 # ---------------------------------------------------------------------------
@@ -23,6 +24,10 @@ def set_background_visible(obj, visible):
 
 def configure_as_bare(obj, width=None, height=None, transparent_bg=True):
     """Zero padding, border, and radius on an existing lv.obj (mutating)."""
+    try:
+        obj.remove_style_all()
+    except AttributeError:
+        pass
     if width is not None:
         obj.set_width(width)
     if height is not None:
@@ -30,6 +35,8 @@ def configure_as_bare(obj, width=None, height=None, transparent_bg=True):
     obj.set_style_pad_all(0, 0)
     obj.set_style_border_width(0, 0)
     obj.set_style_radius(0, 0)
+    obj.set_style_bg_color(BG_HEX, 0)
+    obj.set_style_text_color(WHITE_HEX, 0)
     set_background_visible(obj, not transparent_bg)
 
 

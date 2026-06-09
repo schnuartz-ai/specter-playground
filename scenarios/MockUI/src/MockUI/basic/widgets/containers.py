@@ -4,12 +4,16 @@ All containers have border, padding, and radius zeroed by default.
 """
 
 import lvgl as lv
-from ..utils.ui_consts import DIALOG_RADIUS, BIG_PAD, WHITE_HEX, DROPUP_DIVIDER_OPA
+from ..utils.ui_consts import DIALOG_RADIUS, BIG_PAD, WHITE_HEX, DROPUP_DIVIDER_OPA, BG_HEX, CARD_HEX
 from ..utils.ui_utils import configure_as_bare, configure_flex
 
 
 def _flex_container(parent, flow, width, height, pad = 0, main_align = lv.FLEX_ALIGN.START, transparent_bg=True):
     cont = lv.obj(parent)
+    try:
+        cont.remove_style_all()
+    except AttributeError:
+        pass
     cont.set_width(width if width is not None else lv.pct(100))
     cont.set_height(height if height is not None else lv.SIZE_CONTENT)
     cont.set_layout(lv.LAYOUT.FLEX)
@@ -21,6 +25,9 @@ def _flex_container(parent, flow, width, height, pad = 0, main_align = lv.FLEX_A
     cont.set_style_pad_row(pad, 0)
     if transparent_bg:
         cont.set_style_bg_opa(lv.OPA.TRANSP, 0)
+    else:
+        cont.set_style_bg_color(BG_HEX, 0)
+        cont.set_style_bg_opa(lv.OPA.COVER, 0)
     return cont
 
 
@@ -71,6 +78,10 @@ def card_row(parent, height, width, pad=BIG_PAD, border=True, transparent_bg=Tru
     """
     row = flex_row(parent, width=width, height=height, pad=pad, main_align=lv.FLEX_ALIGN.START, transparent_bg=transparent_bg)
     row.set_style_pad_column(0, 0)
+    if not transparent_bg:
+        row.set_style_bg_color(CARD_HEX, 0)
+        row.set_style_bg_opa(lv.OPA.COVER, 0)
+    row.set_style_radius(18, 0)
     if border:
         row.set_style_border_width(1, 0)
         row.set_style_border_side(lv.BORDER_SIDE.BOTTOM, 0)
@@ -94,9 +105,14 @@ def dialog_card(overlay, w, h, x, y, pad=BIG_PAD):
         pad:     Inner padding; defaults to BIG_PAD.
     """
     dialog = lv.obj(overlay)
+    try:
+        dialog.remove_style_all()
+    except AttributeError:
+        pass
     dialog.set_size(w, h)
     dialog.set_pos(x, y)
     dialog.set_style_radius(DIALOG_RADIUS, 0)
+    dialog.set_style_bg_color(CARD_HEX, 0)
     dialog.set_style_border_width(0, 0)
     dialog.set_style_pad_all(pad, 0)
     dialog.set_scrollbar_mode(lv.SCROLLBAR_MODE.OFF)

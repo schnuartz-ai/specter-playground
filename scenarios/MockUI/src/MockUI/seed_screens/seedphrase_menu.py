@@ -10,6 +10,8 @@ class SeedPhraseMenu(GenericMenu):
     menu_id: "manage_seedphrase"
     """
     TITLE_KEY = "MENU_MANAGE_SEED"
+    ROW_HEIGHT = 70
+    ROW_GAP = 9
 
     def get_menu_items(self, t, state):
         # Sign message (only when signing is possible)
@@ -22,23 +24,17 @@ class SeedPhraseMenu(GenericMenu):
 
         menu_items = []
 
-        menu_items.append(MenuItem(BTC_ICONS.VISIBLE, t("SEEDPHRASE_MENU_SHOW"), "show_seedphrase", color=ORANGE_HEX))
-
         pp_label = t("MENU_CHANGE_CLEAR_PASSPHRASE") if self.ui_state.active_seed.passphrase else t("MENU_SET_PASSPHRASE")
-        menu_items.append(MenuItem(BTC_ICONS.PASSWORD, pp_label, "set_passphrase", is_submenu=True))
-
         menu_items += [
-            MenuItem(text=t("SEEDPHRASE_MENU_BACKUP")),
+            MenuItem(BTC_ICONS.VISIBLE, t("SEEDPHRASE_MENU_SHOW"), "show_seedphrase", color=ORANGE_HEX),
+            MenuItem(BTC_ICONS.PASSWORD, pp_label, "set_passphrase", is_submenu=True),
             MenuItem(BTC_ICONS.RECEIVE, t("SEEDPHRASE_MENU_STORE_TO") + "...", "store_seedphrase", is_submenu=True),
         ]
 
-        # Explore section
         menu_items += [
-            MenuItem(text=t("SEEDPHRASE_MENU_EXPLORE")),
             MenuItem(BTC_ICONS.WALLET, t("SEEDPHRASE_MENU_RELATED_WALLETS"), "related_wallets_for_seed", is_submenu=True),
         ]
 
-        menu_items.append(MenuItem(text=t("SEEDPHRASE_MENU_ADVANCED")))
         if can_sign_msg:
             menu_items.append(MenuItem(BTC_ICONS.SIGN, t("MAIN_MENU_SIGN_MESSAGE"), "sign_message"))        
         menu_items.append(MenuItem(BTC_ICONS.SHARED_WALLET, t("SEEDPHRASE_MENU_BIP85"), "derive_bip85"))

@@ -6,7 +6,7 @@ SCREEN_WIDTH = const(480)
 SCREEN_HEIGHT = const(800)
 
 # --- Menu / button sizes ---
-BTN_HEIGHT = const(75)           # menu button height (px)
+BTN_HEIGHT = const(88)           # menu button height (px)
 BTN_WIDTH = const(100)           # menu button width (percent of screen width)
 PIN_BTN_HEIGHT = const(85)       # lock screen PIN keypad button height (px)
 PIN_BTN_WIDTH = const(115)       # lock screen PIN keypad button width (px)
@@ -15,7 +15,7 @@ BACK_BTN_WIDTH = const(48)       # back button width (px)
 MENU_PCT = const(100)
 TITLE_ROW_HEIGHT = const(60)     # fixed height reserved for the title + back-btn row
 TITLE_TA_WIDTH = const(200)      # width of editable title text area (px)
-TITLE_PADDING = const(15)        # gap between title row and button container
+TITLE_PADDING = const(22)        # gap between title row and button container
 STATUS_BTN_HEIGHT = const(50)    # status bar button height (was 30)
 STATUS_BTN_WIDTH = const(60)     # status bar button width  (was 40)
 SWITCH_HEIGHT = const(82)        # toggle switch height (was 55)
@@ -83,15 +83,25 @@ TITLE_FONT = lv.font_montserrat_28
 TEXT_FONT = lv.font_montserrat_22
 SMALL_TEXT_FONT = lv.font_montserrat_16
 
-GREEN = const("#00D100")
-GREEN_HEX = lv.color_hex(0x00D100)
-ORANGE = const("#FF9A00")
-ORANGE_HEX = lv.color_hex(0xFF9A00)
-RED = const("#F10000")
-RED_HEX = lv.color_hex(0xF10000)
-WHITE = const("#FFFFFF")
-WHITE_HEX = lv.color_hex(0xFFFFFF)
-GREY = const("#606060")
-GREY_HEX = lv.color_hex(0x606060)
-BLACK = const("#000000")
-BLACK_HEX = lv.color_hex(0x000000)
+FRAME = const("#516071")
+FRAME_HEX = lv.color_hex(0x516071)
+CARD = const("#273042")
+CARD_HEX = lv.color_hex(0x273042)
+BG = const("#192432")
+BG_HEX = lv.color_hex(0x192432)
+BLUE = const("#1F99E5")
+BLUE_HEX = lv.color_hex(0x1F99E5)
+WHITE = const("#FEFEFE")
+WHITE_HEX = lv.color_hex(0xFEFEFE)
+
+# Legacy semantic names are intentionally remapped to the allowed palette.
+GREEN = BLUE
+GREEN_HEX = BLUE_HEX
+ORANGE = BLUE
+ORANGE_HEX = BLUE_HEX
+RED = BLUE
+RED_HEX = BLUE_HEX
+GREY = FRAME
+GREY_HEX = FRAME_HEX
+BLACK = BG
+BLACK_HEX = BG_HEX

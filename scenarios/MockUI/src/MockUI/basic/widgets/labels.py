@@ -1,7 +1,7 @@
 """Label helpers — lv.label wrappers with Specter default styling."""
 
 import lvgl as lv
-from ..utils.ui_consts import BTN_WIDTH, TEXT_FONT
+from ..utils.ui_consts import BTN_WIDTH, TEXT_FONT, WHITE_HEX
 from ..utils.ui_utils import to_lv_color
 
 # ── Font selection helpers ────────────────────────────────────────────────────
@@ -69,9 +69,8 @@ def make_label(parent, text, width=None, align=None, font=None, recolor=False, c
     lbl.set_width(width if width is not None else lv.pct(100))
     lbl.set_style_text_font(font if font is not None else TEXT_FONT, 0)
     lbl.set_style_text_align(align if align is not None else lv.TEXT_ALIGN.LEFT, 0)
-    if color is not None:
-        set_label_color(lbl, color)
-    elif recolor:
+    set_label_color(lbl, color if color is not None else WHITE_HEX)
+    if recolor:
         lbl.set_recolor(True)
     return lbl
 

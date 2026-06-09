@@ -22,11 +22,12 @@ from .confirm_modals import confirm_delete_seed, confirm_delete_wallet
 from ..utils.ui_consts import (
     BTC_ICON_WIDTH, SMALL_TEXT_FONT, STATUS_BTN_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT,
     STATUS_BAR_PCT, WHITE_HEX, ORANGE_HEX, BIG_PAD, CARD_H,
-    DROPUP_DIVIDER_OPA, TEXT_FONT
+    DROPUP_DIVIDER_OPA, TEXT_FONT, BG_HEX, CARD_HEX, BLUE_HEX, TITLE_FONT
 )
 from ..utils.ui_consts import anim_duration_ms
 from ..symbol_lib import BTC_ICONS
 from ..widgets.containers import flex_col, flex_row
+from ..widgets.labels import body_label
 from ..widgets.btn import Btn
 from ..widgets.seed_widgets import build_seed_card
 from ..widgets.wallet_widgets import build_wallet_card, wallet_net_text
@@ -39,7 +40,13 @@ from ..ui_state import Context
 _NAV_BAR_H = SCREEN_HEIGHT * STATUS_BAR_PCT // 100   # navigation bar height (px)
 _PANEL_MAX_H = SCREEN_HEIGHT - _NAV_BAR_H            # max panel height
 
-_ADD_BTN_H = STATUS_BTN_HEIGHT                     # "Add …" button height
+_PANEL_PAD_X = const(24)
+_PANEL_PAD_TOP = const(18)
+_PANEL_GAP = const(12)
+_SHEET_CARD_H = const(86)
+_HEADER_H = const(44)
+_ADD_BTN_H = const(68)
+_SHEET_CARD_W = SCREEN_WIDTH - 2 * _PANEL_PAD_X
 
 
 _CLOSED = const(0)
@@ -95,7 +102,12 @@ class _DropUp(SpecterGuiMixin):
             transparent_bg=False,
         )
         self._panel.set_style_radius(0, 0)
-        self._panel.set_style_pad_row(0, 0)
+        self._panel.set_style_bg_color(BG_HEX, 0)
+        self._panel.set_style_pad_left(_PANEL_PAD_X, 0)
+        self._panel.set_style_pad_right(_PANEL_PAD_X, 0)
+        self._panel.set_style_pad_top(_PANEL_PAD_TOP, 0)
+        self._panel.set_style_pad_bottom(_PANEL_GAP, 0)
+        self._panel.set_style_pad_row(_PANEL_GAP, 0)
         self._panel.set_scroll_dir(lv.DIR.VER)
         self._panel.set_scrollbar_mode(lv.SCROLLBAR_MODE.AUTO)
         self._panel.add_event_cb(lambda e: setattr(e, 'stop_bubbling', 1), lv.EVENT.CLICKED, None)
@@ -142,7 +154,12 @@ class _DropUp(SpecterGuiMixin):
             transparent_bg=False,
         )
         self._panel.set_style_radius(0, 0)
-        self._panel.set_style_pad_row(0, 0)
+        self._panel.set_style_bg_color(BG_HEX, 0)
+        self._panel.set_style_pad_left(_PANEL_PAD_X, 0)
+        self._panel.set_style_pad_right(_PANEL_PAD_X, 0)
+        self._panel.set_style_pad_top(_PANEL_PAD_TOP, 0)
+        self._panel.set_style_pad_bottom(_PANEL_GAP, 0)
+        self._panel.set_style_pad_row(_PANEL_GAP, 0)
         self._panel.set_scroll_dir(lv.DIR.VER)
         self._panel.set_scrollbar_mode(lv.SCROLLBAR_MODE.AUTO)
         self._panel.add_event_cb(lambda e: setattr(e, 'stop_bubbling', 1), lv.EVENT.CLICKED, None)
@@ -206,12 +223,14 @@ class _DropUp(SpecterGuiMixin):
             self._panel.get_child(0).delete()
         panel_h = self._compute_panel_h()
 
+        self._build_header(self._panel)
+
         #Create cards/items
         for item in self._get_items():
             self._build_card(self._panel, item)
 
         #Create Add Button
-        row = flex_row(self._panel, width=SCREEN_WIDTH, height=_ADD_BTN_H,
+        row = flex_row(self._panel, width=_SHEET_CARD_W, height=_ADD_BTN_H,
                        main_align=lv.FLEX_ALIGN.CENTER)
         btn = Btn(
             row,
@@ -221,7 +240,8 @@ class _DropUp(SpecterGuiMixin):
             callback=self._add_cb,
             font=TEXT_FONT,
         )
-        btn.make_background_transparent()
+        btn.make_accent()
+        btn.set_width(_SHEET_CARD_W)
 
         self._panel.set_size(SCREEN_WIDTH, panel_h)
         self._panel.set_pos(0, _PANEL_MAX_H - panel_h)
@@ -244,12 +264,30 @@ class _DropUp(SpecterGuiMixin):
         """Return text for the add button."""
         raise NotImplementedError
 
+    def _panel_title(self):
+        """Return title for the drop-up sheet."""
+        raise NotImplementedError
+
     # ── Private helpers ───────────────────────────────────────────────────────
 
     def _compute_panel_h(self):
-        # Exact: pad_row is forced to 0 on the panel, so content = n*CARD_H + _ADD_BTN_H
-        content_h = len(self._get_items()) * CARD_H + _ADD_BTN_H
+        item_count = len(self._get_items())
+        content_h = (
+            _PANEL_PAD_TOP
+            + _HEADER_H
+            + (item_count * _SHEET_CARD_H)
+            + ((item_count + 1) * _PANEL_GAP)
+            + _ADD_BTN_H
+            + _PANEL_GAP
+        )
         return min(content_h, _PANEL_MAX_H)
+
+    def _build_header(self, parent):
+        row = flex_row(parent, width=_SHEET_CARD_W, height=_HEADER_H,
+                       main_align=lv.FLEX_ALIGN.START)
+        title = body_label(row, self._panel_title(), width=lv.pct(100),
+                           align=lv.TEXT_ALIGN.LEFT, font=TITLE_FONT)
+        title.set_style_text_color(WHITE_HEX, 0)
 
     def _add_cb(self, event=None):
         # Navigation case: skip self.close(); the GUI's navigation
@@ -302,6 +340,9 @@ class SeedDropUp(_DropUp):
     def _add_button_label(self):
         return self.t("MENU_ADD_SEED")
 
+    def _panel_title(self):
+        return "Seeds"
+
     def _navigate_add(self):
         self.on_navigate("add_seed", target_seed=None)
 
@@ -341,7 +382,10 @@ class SeedDropUp(_DropUp):
         build_seed_card(
             parent,
             seed,
-            slots=("name", "backup_warning", "passphrase", "fingerprint", "delete"),
+            height=_SHEET_CARD_H,
+            width=_SHEET_CARD_W,
+            slots=("leading_icon", "name", "backup_warning", "passphrase", "fingerprint", "delete"),
+            leading_icon=BTC_ICONS.KEY_OUTLINE,
             on_card_click=self._make_row_cb(seed),
             on_backup_warning=_make_warn_cb(seed),
             on_delete=_make_delete_cb(seed),
@@ -364,6 +408,9 @@ class WalletDropUp(_DropUp):
     def _add_button_label(self):
         return self.t("MENU_ADD_WALLET")
 
+    def _panel_title(self):
+        return "Wallets"
+
     def _navigate_add(self):
         #clear active wallet to avoid accidentally pre-filling add form with previously selected wallet's data
         self.on_navigate("add_wallet", target_wallet=None)
@@ -374,7 +421,7 @@ class WalletDropUp(_DropUp):
         any_account = any(getattr(w, "account", 0) != 0 for w in state.registered_wallets)
         any_net     = any(w.net != "mainnet" for w in state.registered_wallets)
 
-        active_slots = ["type_icon", "name", "threshold"]
+        active_slots = ["leading_icon", "name", "type_icon", "threshold"]
         if any_account:
             active_slots.append("account")
         if any_net:
@@ -399,7 +446,10 @@ class WalletDropUp(_DropUp):
             parent,
             wallet,
             state,
+            height=_SHEET_CARD_H,
+            width=_SHEET_CARD_W,
             slots=active_slots,
+            leading_icon=BTC_ICONS.WALLET_OUTLINE,
             on_card_click=self._make_row_cb(wallet),
             on_delete=_make_delete_cb(wallet) if not wallet.is_default_wallet() else None,
         )

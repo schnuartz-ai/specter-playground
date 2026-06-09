@@ -11,7 +11,7 @@ from .labels import make_label, best_font_for_size
 from .inputs import title_textarea
 from .btn import Btn
 from ..symbol_lib import BTC_ICONS
-from ..utils.ui_consts import WHITE_HEX, BIG_PAD
+from ..utils.ui_consts import WHITE_HEX, BIG_PAD, BLUE_HEX
 
 
 def compute_name_width(width, slots, slot_costs, min_width=10):
@@ -48,7 +48,7 @@ def build_card_row(parent, height, width, border, on_card_click):
     Returns:
         The created ``lv.obj`` row.
     """
-    row = card_row(parent, height=height, width=width, border=border)
+    row = card_row(parent, height=height, width=width, border=border, transparent_bg=False)
     if on_card_click is not None:
         row.add_event_cb(on_card_click, lv.EVENT.CLICKED, None)
     return row
@@ -61,7 +61,19 @@ def build_leading_icon_slot(row, leading_icon):
         row:          The card row ``lv.obj``.
         leading_icon: Icon constant (e.g. ``BTC_ICONS.KEY_OUTLINE``).
     """
-    make_icon(row, leading_icon, WHITE_HEX)
+    slot = lv.obj(row)
+    try:
+        slot.remove_style_all()
+    except AttributeError:
+        pass
+    slot.set_size(48, 48)
+    slot.set_style_bg_color(BLUE_HEX, 0)
+    slot.set_style_bg_opa(lv.OPA.COVER, 0)
+    slot.set_style_radius(12, 0)
+    slot.set_style_border_width(0, 0)
+    slot.set_style_pad_all(0, 0)
+    slot.remove_flag(lv.obj.FLAG.CLICKABLE)
+    make_icon(slot, leading_icon, WHITE_HEX).center()
 
 
 def build_name_slot(row, label, name_w, height, on_name_click, editable=True):

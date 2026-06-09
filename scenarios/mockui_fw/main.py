@@ -24,14 +24,15 @@ else:
 # --- End simulator setup ---
 
 from MockUI import SpecterGui, DeviceState, Wallet
+from MockUI.basic.utils.ui_consts import BG_HEX
 from MockUI.stubs import Seed
 
 gc.collect()
 
 lv.theme_default_init(
     None,
-    lv.palette_main(lv.PALETTE.BLUE_GREY),
-    lv.palette_main(lv.PALETTE.RED),
+    BG_HEX,
+    BG_HEX,
     True,
     lv.font_montserrat_16,
 )

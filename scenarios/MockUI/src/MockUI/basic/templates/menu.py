@@ -1,5 +1,10 @@
 import lvgl as lv
-from ..utils.ui_consts import BTN_HEIGHT, BTN_WIDTH, MODAL_HEIGHT_PCT, MODAL_WIDTH_PCT, SWITCH_HEIGHT, SWITCH_WIDTH, PAD, SMALL_PAD, SMALL_TEXT_FONT, BTC_ICON_WIDTH, DEFAULT_MODAL_BG_OPA, SCREEN_WIDTH, SCREEN_HEIGHT
+from ..utils.ui_consts import (
+    BTN_HEIGHT, BTN_WIDTH, MODAL_HEIGHT_PCT, MODAL_WIDTH_PCT, SWITCH_HEIGHT,
+    SWITCH_WIDTH, PAD, SMALL_PAD, SMALL_TEXT_FONT, BTC_ICON_WIDTH,
+    DEFAULT_MODAL_BG_OPA, SCREEN_WIDTH, SCREEN_HEIGHT, BLUE_HEX, WHITE_HEX,
+    TEXT_FONT,
+)
 from .titled_screen import TitledScreen
 from ..symbol_lib import Icon, BTC_ICONS
 from ..widgets.modal_overlay import ModalOverlay
@@ -23,7 +28,7 @@ class GenericMenu(TitledScreen):
 
     def __init__(self, parent):
         # TitledScreen sets self.gui, self.device_state, self.ui_state, self.i18n, self.on_navigate, self.body, etc.
-        super().__init__("", parent)
+        super().__init__("", parent, show_title=getattr(self, "SHOW_TITLE", True))
 
         if self.title:
             title = self.get_title(self.t, self.device_state)
@@ -31,6 +36,9 @@ class GenericMenu(TitledScreen):
 
         self.body.set_layout(lv.LAYOUT.FLEX)
         configure_flex(self.body)
+        self.body.set_style_pad_left(24, 0)
+        self.body.set_style_pad_right(24, 0)
+        self.body.set_style_pad_row(getattr(self, "ROW_GAP", 14), 0)
         self.fill_body()
 
     def refresh(self):
@@ -50,17 +58,43 @@ class GenericMenu(TitledScreen):
 
     def _build_menu_items(self, menu_items):
         """Dispatch each MenuItem to the appropriate row builder."""
-        for item in menu_items:
+        i = 0
+        while i < len(menu_items):
+            item = menu_items[i]
             if item.target is None and (item.get_value is None or item.set_value is None):
                 self._build_section_row(item)
             elif item.get_value is not None and item.set_value is not None:
                 self._build_toggle_row(item)
+            elif getattr(item, "width_pct", 100) < 100:
+                row = flex_row(
+                    self.body,
+                    width=lv.pct(100),
+                    height=int(getattr(self, "ROW_HEIGHT", BTN_HEIGHT) * (item.size if item.size and item.size >= 1 else 1)),
+                    main_align=lv.FLEX_ALIGN.SPACE_BETWEEN,
+                )
+                row.set_style_pad_column(14, 0)
+                while i < len(menu_items):
+                    half = menu_items[i]
+                    if (
+                        half.target is None
+                        or half.get_value is not None
+                        or getattr(half, "width_pct", 100) >= 100
+                    ):
+                        i -= 1
+                        break
+                    self._build_button_row(half, parent=row, width_pct=half.width_pct)
+                    i += 1
+                if i >= len(menu_items):
+                    break
             else:
                 self._build_button_row(item)
+            i += 1
 
     def _build_section_row(self, item):
         """Section header row: optional icon + bold/coloured heading label."""
         row = flex_row(self.body, width=lv.pct(100), main_align=lv.FLEX_ALIGN.START)
+        row.set_style_pad_top(8, 0)
+        row.set_style_pad_bottom(4, 0)
         if item.icon and isinstance(item.icon, Icon):
             make_icon(row, item.icon, color=item.font_color if item.font_color else None)
         section_header(row, item.text, color=item.font_color).set_flex_grow(1)
@@ -95,26 +129,53 @@ class GenericMenu(TitledScreen):
             return _cb
         sw.add_event_cb(_make_toggle_cb(item.set_value), lv.EVENT.VALUE_CHANGED, None)
 
-    def _build_button_row(self, item):
+    def _build_button_row(self, item, parent=None, width_pct=None):
         """Full menu button: icon + text + right-side suffixes/help/caret."""
         # Normalize size: default to 1, ensure minimum of 1
         size = item.size if item.size and item.size >= 1 else 1
+        is_compact = width_pct is not None and width_pct < 90
+        item_font = SMALL_TEXT_FONT if is_compact else TEXT_FONT
+        icon_size = 42 if is_compact else 48
+        icon_x = 16 if is_compact else 24
+        label_x = 68 if is_compact else 94
 
         # Btn: icon is positioned manually at LEFT_MID so it stays left-aligned
         # regardless of text length (not using flex).
         btn = Btn(
-            self.body,
+            parent or self.body,
             text=item.text,
             color=item.color if item.color else None,
             fontcolor=item.font_color,
-            size=(lv.pct(BTN_WIDTH), int(BTN_HEIGHT * size)),
+            size=(lv.pct(width_pct if width_pct is not None else BTN_WIDTH), int(getattr(self, "ROW_HEIGHT", BTN_HEIGHT) * size)),
+            font=item_font,
         )
+        if item.color is not None:
+            btn.make_accent()
+        if btn.lbl is not None:
+            if is_compact:
+                btn.lbl.set_width(148)
+                btn.lbl.set_long_mode(lv.label.LONG_MODE.CLIP)
+            btn.lbl.align(lv.ALIGN.LEFT_MID, label_x, 0)
+            btn.lbl.set_style_text_align(lv.TEXT_ALIGN.LEFT, 0)
         # Icon instance (BTC_ICONS.*) — add as image at left edge
         if item.icon and isinstance(item.icon, Icon):
-            make_icon(btn._btn, item.icon, color=item.font_color).align(lv.ALIGN.LEFT_MID, PAD, 0)
+            icon_bg = lv.obj(btn._btn)
+            try:
+                icon_bg.remove_style_all()
+            except AttributeError:
+                pass
+            icon_bg.set_size(icon_size, icon_size)
+            icon_bg.set_style_bg_color(BLUE_HEX, 0)
+            icon_bg.set_style_bg_opa(lv.OPA.COVER, 0)
+            icon_bg.set_style_radius(12, 0)
+            icon_bg.set_style_border_width(0, 0)
+            icon_bg.set_style_pad_all(0, 0)
+            icon_bg.remove_flag(lv.obj.FLAG.CLICKABLE)
+            icon_bg.align(lv.ALIGN.LEFT_MID, icon_x, 0)
+            make_icon(icon_bg, item.icon, color=WHITE_HEX).center()
         # String symbols (lv.SYMBOL.*) — add as recolor label at left edge
         elif item.icon:
-            body_label(btn._btn, item.icon, width=lv.SIZE_CONTENT, color=item.font_color, recolor=True).align(lv.ALIGN.LEFT_MID, PAD, 0)
+            body_label(btn._btn, item.icon, width=lv.SIZE_CONTENT, color=item.font_color, recolor=True).align(lv.ALIGN.LEFT_MID, 24, 0)
 
         # Right-side container: [suffixes...] [help?] [caret — always reserved]
         right_cont = flex_row(
@@ -139,10 +200,10 @@ class GenericMenu(TitledScreen):
             self._add_help_btn(right_cont, (BTC_ICON_WIDTH, BTC_ICON_WIDTH), item.text, item.help_key, item.font_color)
 
         if item.is_submenu:
-            make_icon(right_cont, BTC_ICONS.CARET_RIGHT, item.font_color)
+            make_icon(right_cont, BTC_ICONS.CARET_RIGHT, WHITE_HEX)
 
         right_cont.update_layout()
-        right_cont.align(lv.ALIGN.RIGHT_MID, -SMALL_PAD, 0)
+        right_cont.align(lv.ALIGN.RIGHT_MID, -18, 0)
 
         btn.add_event_cb(self.make_menu_button_callback(item.target), lv.EVENT.CLICKED, None)
 
