@@ -34,17 +34,27 @@ sync-i18n:
 	@mkdir -p build
 	python3 tools/sync_i18n.py --dry-run
 
+# Icon tree-shaking: remove unused BTC_ICONS from the firmware freeze path.
+# Moves unused icon files to tools/symbol_lib/icons_available/ and comments
+# them out in btc_icons.py.  Only needed for hardware builds (the simulator
+# has no flash-size constraint).  Run manually with --dry-run to preview:
+#   python3 tools/symbol_lib/trim_btc_icons.py --dry-run
+trim-icons:
+	@echo Trimming unused BTC_ICONS from firmware freeze path...
+	@mkdir -p build
+	python3 tools/symbol_lib/trim_btc_icons.py
+
 # i18n compilation
 build-i18n: sync-i18n
 	@echo Building i18n files...
 	@mkdir -p build/flash_image/i18n
-	@cd scenarios/MockUI/src/MockUI/i18n && python3 lang_compiler.py generate_keys languages/specter_ui_en.json
-	@cd scenarios/MockUI/src/MockUI/i18n && python3 lang_compiler.py compile languages/specter_ui_en.json && mv lang_en.bin ../../../../../build/flash_image/i18n/
+	@cd scenarios/MockUI/src/MockUI/basic/i18n && python3 lang_compiler.py generate_keys languages/specter_ui_en.json
+	@cd scenarios/MockUI/src/MockUI/basic/i18n && python3 lang_compiler.py compile languages/specter_ui_en.json && mv lang_en.bin ../../../../../../build/flash_image/i18n/
 	@if [ -n "$(ADD_LANG)" ]; then \
 		for lang in $(shell echo $(ADD_LANG) | tr ',' ' '); do \
-			if [ -f scenarios/MockUI/src/MockUI/i18n/languages/specter_ui_$$lang.json ]; then \
+			if [ -f scenarios/MockUI/src/MockUI/basic/i18n/languages/specter_ui_$$lang.json ]; then \
 				echo "  Compiling $$lang..."; \
-				cd scenarios/MockUI/src/MockUI/i18n && python3 lang_compiler.py compile languages/specter_ui_$$lang.json && mv lang_$$lang.bin ../../../../../build/flash_image/i18n/ || true; \
+				cd scenarios/MockUI/src/MockUI/basic/i18n && python3 lang_compiler.py compile languages/specter_ui_$$lang.json && mv lang_$$lang.bin ../../../../../../build/flash_image/i18n/ || true; \
 			else \
 				echo "  Warning: Language file languages/specter_ui_$$lang.json not found"; \
 			fi; \
@@ -140,7 +150,7 @@ hello: $(TARGET_DIR) mpy-cross $(MPY_DIR)/ports/stm32
 		$(TARGET_DIR)/hello.hex
 
 # MockUI firmware with embedded filesystem
-mockui: $(TARGET_DIR) mpy-cross build-i18n build-flash-image $(MPY_DIR)/ports/stm32
+mockui: $(TARGET_DIR) mpy-cross trim-icons build-i18n build-flash-image $(MPY_DIR)/ports/stm32
 	@echo Building MockUI firmware
 	make -C $(MPY_DIR)/ports/stm32 \
 		BOARD=$(BOARD) \
@@ -180,7 +190,7 @@ all: mpy-cross disco unix
 clean:
 	rm -rf $(TARGET_DIR)
 	rm -rf build
-	rm -f scenarios/MockUI/src/MockUI/i18n/translation_keys.py scenarios/MockUI/src/MockUI/i18n/language_config.json
+	rm -f scenarios/MockUI/src/MockUI/basic/i18n/translation_keys.py scenarios/MockUI/src/MockUI/basic/i18n/language_config.json
 	make -C $(MPY_DIR)/mpy-cross clean
 	rm -rf $(MPY_DIR)/mpy-cross/build
 	make -C $(MPY_DIR)/ports/unix \

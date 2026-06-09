@@ -1,0 +1,321 @@
+"""NavigationBar — permanent bottom navigation bar for Specter MockUI.
+
+Layout (left-to-right, full width, STATUS_BAR_PCT% height):
+    ┌────────────────────────────────────────────────────┐
+    │  [Back]   [Seed]   [Home]   [Wallet]   [Device]    │
+    │  pos 1    pos 2    pos 3    pos 4      pos 5       │
+    └────────────────────────────────────────────────────┘
+
+All five slots have fixed positions (SCREEN_WIDTH / 5 each).
+
+Filled vs outline icon rules
+─────────────────────────────
+- Home   → filled when current_menu_id == "main"
+- Seed   → filled when current_menu_id is in _SEED_MENUS
+- Wallet → filled when current_menu_id is in _WALLET_MENUS
+- Device → filled when current_menu_id is in _DEVICE_MENUS
+- Back   → always filled (CARET_LEFT, no outline variant)
+
+Drop-up ownership
+─────────────────
+NavigationBar creates SeedDropUp and WalletDropUp in __init__ and owns
+their full lifecycle.  A single shared ModalOverlay backdrop is created
+lazily on the first open and destroyed once both drop-ups are closed.
+"""
+
+import lvgl as lv
+from ..utils.ui_consts import (
+    SCREEN_WIDTH, SCREEN_HEIGHT, STATUS_BTN_HEIGHT, STATUS_BAR_PCT,
+    DEFAULT_MODAL_BG_OPA, CARD_HEX, BLUE_HEX, WHITE_HEX
+)
+from ..symbol_lib import BTC_ICONS
+from ..widgets.btn import Btn
+from ..widgets.modal_overlay import ModalOverlay
+from ..templates.specter_gui_base import SpecterGuiElement
+from ..utils.ui_utils import configure_as_bare, set_background_visible
+from .dropup import SeedDropUp, WalletDropUp, DropUpState
+from ..ui_state import Context
+
+# Feature probe: the LTDC/DMA2D compositor that powers the HW slide
+# animations lives in the firmware-side `udisplay` module. On the unix
+# simulator the stub module exists but does not expose `transition`, so
+# we must fall back to the legacy LVGL animation. Probe at import time.
+try:  # pragma: no cover - hardware-only path
+    import udisplay as _udisplay  # type: ignore
+    _HAS_HW_TRANSITION = hasattr(_udisplay, "transition")
+except ImportError:  # pragma: no cover
+    _HAS_HW_TRANSITION = False
+
+class NavigationBar(SpecterGuiElement):
+    """Permanent bottom navigation bar with 5 fixed-position icon buttons."""
+
+    def __init__(self, gui):
+        super().__init__(gui)
+
+        self.gui = gui
+
+        # Shared semi-transparent backdrop (one ModalOverlay for both drop-ups)
+        self._backdrop = None
+
+        # Create drop-ups — NavigationBar owns their lifecycle
+        self._seed_dropup = SeedDropUp(gui)
+        self._seed_dropup._on_closed = self._on_any_panel_closed
+        self._wallet_dropup = WalletDropUp(gui)
+        self._wallet_dropup._on_closed = self._on_any_panel_closed
+
+        # ── Bar container style ───────────────────────────────────────────────
+        configure_as_bare(self, width=lv.pct(100), height=lv.pct(STATUS_BAR_PCT))
+        self.set_style_bg_color(CARD_HEX, 0)
+        self.set_style_bg_opa(lv.OPA.COVER, 0)
+        self.set_layout(lv.LAYOUT.NONE)   # absolute child positioning
+        self.set_scroll_dir(lv.DIR.NONE)
+
+        h = STATUS_BTN_HEIGHT
+        w = SCREEN_WIDTH // 5
+
+        names = ["Back", "Seed", "Home", "Wallet", "Device"]
+        icons = [BTC_ICONS.CARET_LEFT,
+                 BTC_ICONS.KEY_OUTLINE,
+                 BTC_ICONS.HOME_OUTLINE,
+                 BTC_ICONS.WALLET_OUTLINE,
+                 BTC_ICONS.GEAR_OUTLINE]
+        cbs = [self._back_cb, self._seed_cb, self._home_cb, self._wallet_cb, self._device_cb]
+
+        self.buttons = {}
+        for i, (name, icon, cb) in enumerate(zip(names, icons, cbs)):
+            self.buttons[name] = Btn(self, icon=icon, size=(w, h), callback=cb)
+            self.buttons[name].make_background_transparent()
+            self.buttons[name].align(lv.ALIGN.LEFT_MID, i * w, 0)
+
+    # ── Drop-up management ────────────────────────────────────────────────────────
+
+    def _ensure_backdrop(self):
+        """Create shared backdrop if not already present; return its container."""
+        if self._backdrop is not None:
+            return self._backdrop.overlay
+        _panel_max_h = SCREEN_HEIGHT - SCREEN_HEIGHT * STATUS_BAR_PCT // 100
+        self._backdrop = ModalOverlay(bg_opa=DEFAULT_MODAL_BG_OPA,
+                                      width=SCREEN_WIDTH, height=_panel_max_h)
+        self._backdrop.overlay.add_event_cb(self._backdrop_tap_cb, lv.EVENT.CLICKED, None)
+        return self._backdrop.overlay
+
+    def _release_backdrop_if_idle(self):
+        """Destroy shared backdrop once both drop-ups are fully closed."""
+        if self._backdrop is None:
+            return
+        if (self._seed_dropup.get_state() == DropUpState.CLOSED
+                and self._wallet_dropup.get_state() == DropUpState.CLOSED):
+            self._backdrop.close()
+            self._backdrop = None
+
+    def _on_any_panel_closed(self):
+        """Called by a drop-up after its close animation completes."""
+        self._release_backdrop_if_idle()
+        self.gui.refresh_ui()
+
+    def _backdrop_tap_cb(self, event):
+        if event.get_code() == lv.EVENT.CLICKED:
+            self.close_dropups()
+
+    def _open_dropup(self, dropup):
+        """Ensure the shared backdrop exists and open *dropup* inside it.
+
+        Uses the HW compositor path when animations are enabled (so
+        the panel slides up via the LTDC slide-in compositor); falls
+        back to the legacy LV slide-y animation otherwise (e.g. on the
+        unix simulator where ``udisplay.transition`` is unavailable).
+        """
+        container = self._ensure_backdrop()
+        use_hw = (
+            _HAS_HW_TRANSITION
+            and getattr(self.gui, 'ui_state', None) is not None
+            and self.gui.ui_state.are_animations_enabled
+            and hasattr(self.gui, '_hw_dropup_slide_in')
+        )
+        if use_hw:
+            self.gui._hw_dropup_slide_in(dropup, container)
+        else:
+            dropup.open(container)
+
+    def _close_dropup(self, dropup):
+        """Close a specific drop-up via the HW compositor slide-out."""
+        if dropup.get_state() not in (DropUpState.OPENING, DropUpState.OPEN):
+            return
+        use_hw = (
+            _HAS_HW_TRANSITION
+            and getattr(self.gui, 'ui_state', None) is not None
+            and self.gui.ui_state.are_animations_enabled
+            and hasattr(self.gui, '_hw_dropup_close_pure')
+        )
+        if use_hw:
+            self.gui._hw_dropup_close_pure()
+        else:
+            dropup.close()
+
+    # ── Public API ────────────────────────────────────────────────────────────
+
+    def close_dropups(self):
+        """Close any open drop-ups."""
+        self._close_dropup(self._seed_dropup)
+        self._close_dropup(self._wallet_dropup)
+
+    def close_dropups_sync(self):
+        """Dismiss any open drop-up via the LV path, bypassing the HW
+        compositor wrapper.
+
+        Used by callers that cannot kick the HW chained close — i.e.
+        navigation paths that take the no-animation branch, or
+        full-screen transitions on builds without ``udisplay.transition``
+        (e.g. the unix simulator). The shared backdrop is released via
+        the existing ``_on_closed`` -> ``_on_any_panel_closed`` chain.
+        Respects ``ui_state.are_animations_enabled``: with animations
+        off the panel is removed instantly, otherwise it slides down."""
+        for d in (self._seed_dropup, self._wallet_dropup):
+            if d.get_state() in (DropUpState.OPENING, DropUpState.OPEN):
+                d.close()
+
+    def refresh(self):
+        """Update filled/outline icons and Back button visibility.
+
+        Should be called whenever the current menu changes.
+        Reads gui.ui_state.current_menu_id directly.
+        """
+        if self.device_state.is_locked:
+            # If device is locked, nav bar shows no icons and no back button and is not transparent
+            set_background_visible(self, True)
+            for btn in self.buttons.values():
+                btn.set_visible(False)
+        else:
+            set_background_visible(self, False)
+
+            # Back button: visible unless we are at the root / home menu
+            self.buttons["Back"].set_visible(not self.current_menu == "main")
+
+            seed_open = self._seed_dropup.get_state() in (DropUpState.OPENING, DropUpState.OPEN)
+            wallet_open = self._wallet_dropup.get_state() in (DropUpState.OPENING, DropUpState.OPEN)
+
+            # Home icon: filled only when on main and no dropup is open
+            if self.current_menu == "main" and not seed_open and not wallet_open:
+                self.buttons["Home"].update_icon(BTC_ICONS.HOME(BLUE_HEX))
+            else:
+                self.buttons["Home"].update_icon(BTC_ICONS.HOME_OUTLINE(WHITE_HEX))
+            self.buttons["Home"].set_visible(True)  # Home is always visible when not locked
+
+            # Seed icon: filled when dropup open OR when in a seed menu
+            if (self.context == Context.SEED and not wallet_open) or seed_open:
+                self.buttons["Seed"].update_icon(BTC_ICONS.KEY(BLUE_HEX))
+            else:
+                self.buttons["Seed"].update_icon(BTC_ICONS.KEY_OUTLINE(WHITE_HEX))
+            #Seed icon: invisible when no seed loaded
+            self.buttons["Seed"].set_visible(self.gui.device_state and len(self.gui.device_state.loaded_seeds) > 0)
+
+            # Wallet icon: filled when dropup open OR when in a wallet menu
+            if (self.context == Context.WALLET and not seed_open) or wallet_open:
+                self.buttons["Wallet"].update_icon(BTC_ICONS.WALLET(BLUE_HEX))
+            else:
+                self.buttons["Wallet"].update_icon(BTC_ICONS.WALLET_OUTLINE(WHITE_HEX))
+            #Wallet icon: invisible when no seed loaded
+            self.buttons["Wallet"].set_visible(
+                self.gui.device_state and 
+                ((len(self.gui.device_state.loaded_seeds) > 0) or
+                 (len(self.gui.device_state.registered_wallets) > 1))
+            )
+
+            # Device icon
+            if self.context == Context.DEVICE and not seed_open and not wallet_open:
+                self.buttons["Device"].update_icon(BTC_ICONS.GEAR(BLUE_HEX))
+            else:
+                self.buttons["Device"].update_icon(BTC_ICONS.GEAR_OUTLINE(WHITE_HEX))
+            self.buttons["Device"].set_visible(True)  # Device is always visible when not locked
+
+            # Rebuild drop-up card lists if open (e.g. after passphrase/wallet state change)
+            if self._seed_dropup.get_state() == DropUpState.OPEN:
+                self._seed_dropup.refresh()
+            if self._wallet_dropup.get_state() == DropUpState.OPEN:
+                self._wallet_dropup.refresh()
+
+    # ── Button callbacks ──────────────────────────────────────────────────────
+
+    def _dropup_button_cb(self, own_dropup, other_dropup):
+        """Shared logic for Seed and Wallet nav buttons.
+
+        Mutual-exclusion sequencing:
+        - If ``other_dropup`` is open and the user taps ``own_dropup``:
+          run HW slide-out of the old drop-up (phase 1), THEN open the
+          new drop-up (phase 2). This guarantees the two animations
+          never run simultaneously.
+        - If ``own_dropup`` is already open: close it.
+        - Otherwise (nothing open): open ``own_dropup``.
+        """
+        other_open = other_dropup.get_state() in (
+            DropUpState.OPENING, DropUpState.OPEN)
+        own_open = own_dropup.get_state() in (
+            DropUpState.OPENING, DropUpState.OPEN)
+
+        if other_open:
+            if _HAS_HW_TRANSITION:
+                # Chain: HW slide-out old -> open new (LV slide-in).
+                def _open_new_after_close():
+                    self._open_dropup(own_dropup)
+                    self.refresh()
+
+                self.gui._hw_dropup_slide_out(_open_new_after_close)
+            else:
+                # Simulator / no HW compositor: close old via LV path,
+                # then open new.
+                self._close_dropup(other_dropup)
+                self._open_dropup(own_dropup)
+                self.refresh()
+            return
+
+        if own_open:
+            self._close_dropup(own_dropup)
+        else:
+            self._open_dropup(own_dropup)
+        self.refresh()
+
+    def _any_animation_ongoing(self):
+        """Helper to check if any drop-up is currently animating."""
+        return (
+            getattr(self.gui, '_animating', True) 
+            or self._seed_dropup.get_state() in (DropUpState.OPENING, DropUpState.CLOSING)
+            or self._wallet_dropup.get_state() in (DropUpState.OPENING, DropUpState.CLOSING)
+        )
+
+    def _back_cb(self, event=None):
+        if self._any_animation_ongoing():
+            return
+        # If a drop-up is open the navigation pipeline (_transition_full_screen
+        # -> _close_dropups_then) chains the HW slide-out with the screen
+        # transition; no need to pre-close here.
+        self.on_navigate(None)
+
+    def _seed_cb(self, event=None):
+        if self._any_animation_ongoing():
+            return
+        self._dropup_button_cb(self._seed_dropup, self._wallet_dropup)
+
+    def _home_cb(self, event=None):
+        if self._any_animation_ongoing():
+            return
+        # History clearing is handled inside on_navigate/show_menu for target="main"
+        # Dropup close (if any) is chained by the navigation pipeline.
+        self.gui.on_navigate("main")
+
+    def _wallet_cb(self, event=None):
+        if self._any_animation_ongoing():
+            return
+        self._dropup_button_cb(self._wallet_dropup, self._seed_dropup)
+
+    def _device_cb(self, event=None):
+        if self._any_animation_ongoing():
+            return
+
+        if self.context != Context.DEVICE:
+            # Navigation pipeline chains the dropup close with the
+            # screen transition.
+            self.on_navigate("manage_settings")
+        else:
+            # Already on Device context: just close any open dropup.
+            self.close_dropups()
+        self.refresh()
