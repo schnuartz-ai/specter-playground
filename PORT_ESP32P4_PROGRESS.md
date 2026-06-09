@@ -23,27 +23,52 @@ git clone --depth 1 --branch v5.5.1 --recursive https://github.com/espressif/esp
 
   This failed with `Failed to connect to github.com port 443`.
 
-## Current Blockers
+## 2026-06-09
 
-- ESP-IDF is not installed or not exported in this shell; `idf.py` was not found.
-- A temporary ESP-IDF clone/install could not be completed because GitHub was unreachable from this shell during the attempt.
-- `esptool` is not installed in this Python environment.
-- No USB serial device is visible under `/dev/serial/by-id`, `/dev/ttyACM*`, or `/dev/ttyUSB*`, so the board cannot be detected or flashed from this environment yet.
-
-## Next Steps
-
-- Install/export ESP-IDF 5.5.1 or newer with ESP32-P4 toolchain support.
-- Build with:
+- Installed ESP-IDF v5.5.1 outside the repository at `/tmp/esp-idf-v5.5.1` with ESP32-P4 toolchain support.
+- Generated a clean `esp32p4` configuration from `sdkconfig.defaults`.
+- Fixed the obsolete ESP-IDF option `CONFIG_SPIRAM_ALLOW_STACK_EXTERNAL_MEMORY` by using `CONFIG_FREERTOS_TASK_CREATE_ALLOW_EXT_MEM`.
+- Added `.gitignore` entries for generated ESP-IDF output: `build/`, `managed_components/`, `sdkconfig`, and `sdkconfig.old`.
+- Built the prototype successfully from `ports/esp32p4_waveshare_35`:
 
 ```sh
+source /tmp/esp-idf-v5.5.1/export.sh
 cd ports/esp32p4_waveshare_35
 idf.py set-target esp32p4
 idf.py build
 ```
 
+- Build output generated:
+  - `build/bootloader/bootloader.bin`
+  - `build/partition_table/partition-table.bin`
+  - `build/specter_esp32p4_waveshare_35.bin`
+- App binary size: `0xc48d0` bytes. The smallest app partition is `0x800000` bytes, leaving `0x73b730` bytes free.
+- The only remaining configure/build warning observed is the vendored BSP duplicate Kconfig symbol:
+
+```text
+Symbol BSP_I2S_NUM defined in multiple locations:
+  components/esp32_p4_wifi6_touch_lcd_35/Kconfig:30
+  components/bsp_extra/Kconfig:2
+```
+
+- Rechecked USB serial devices after the successful build. No board is visible under `/dev/serial/by-id`, `/dev/ttyACM*`, or `/dev/ttyUSB*`.
+- `lsusb` is not installed in this shell, so USB bus-level inspection is unavailable here.
+- `/sys/bus/usb/devices` only shows WSL2 USB/IP virtual host controllers, not the ESP32-P4 board.
+
+## Current Blockers
+
+- No USB serial device is visible under `/dev/serial/by-id`, `/dev/ttyACM*`, or `/dev/ttyUSB*`, so the board cannot be detected or flashed from this environment yet.
+- The WSL2 environment does not currently have the board attached via USB/IP.
+- Real hardware display, touch, rotation, color order, and UI interaction are not verified.
+- `bd` is required by `AGENTS.md`, but the `bd` executable is not installed in this environment.
+
+## Next Steps
+
 - Connect the board, identify its serial device, then flash and monitor:
 
 ```sh
+source /tmp/esp-idf-v5.5.1/export.sh
+cd ports/esp32p4_waveshare_35
 idf.py -p /dev/ttyACM0 flash monitor
 ```
 
