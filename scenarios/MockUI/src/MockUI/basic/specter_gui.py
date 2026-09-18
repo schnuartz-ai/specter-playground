@@ -46,6 +46,8 @@ from ..device_screens import (
     SettingsMenu,
     PreferencesMenu,
     ThemeMenu,
+    SDCardMenu,
+    SigningMenu,
 )
 
 from ..stubs import DeviceState
@@ -72,6 +74,12 @@ _VIEW_MAP = {
     "set_passphrase":           PassphraseMenu,
     "create_custom_wallet":     CreateCustomWalletMenu,
     "manage_storage":           StorageMenu,
+    "sdcard":                   SDCardMenu,
+    "load_sd":                  SDCardMenu,
+    "import_from_sd":           SDCardMenu,
+    "store_to_sd":              SDCardMenu,
+    "clear_from_sd":            SDCardMenu,
+    "signing":                  SigningMenu,
     "select_language":          LanguageMenu,
     "select_theme":             ThemeMenu,
     "manage_preferences":       PreferencesMenu,

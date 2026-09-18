@@ -8,14 +8,20 @@ from .language_menu import LanguageMenu
 from .settings_menu import SettingsMenu
 from .preferences_menu import PreferencesMenu
 from .theme_menu import ThemeMenu
+from .sd_card_menu import SDCardMenu
+from .signing_menu import SigningMenu
 
-__all__ = ["SecuritySettingsMenu", 
-           "FirmwareMenu", 
-           "InterfacesMenu", 
-           "BackupsMenu", 
-           "SecurityFeaturesMenu", 
-           "StorageMenu", 
-           "LanguageMenu", 
-           "SettingsMenu", 
-           "PreferencesMenu", 
-           "ThemeMenu"]
+__all__ = [
+    "SecuritySettingsMenu",
+    "FirmwareMenu",
+    "InterfacesMenu",
+    "BackupsMenu",
+    "SecurityFeaturesMenu",
+    "StorageMenu",
+    "LanguageMenu",
+    "SettingsMenu",
+    "PreferencesMenu",
+    "ThemeMenu",
+    "SDCardMenu",
+    "SigningMenu",
+]

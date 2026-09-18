@@ -5,6 +5,12 @@ Ephemeral — never persisted across power cycles in working memory.
 """
 import urandom
 
+try:
+    from embit import bip32, bip39
+except ImportError:
+    bip32 = None
+    bip39 = None
+
 class Seed:
     """Tiny seed placeholder used by DeviceState.
 
@@ -14,15 +20,29 @@ class Seed:
         passphrase: optional BIP-39 passphrase (None if not set)
     """
 
-    def __init__(self, label, fingerprint=None, passphrase=None,
+    def __init__(self, label, fingerprint=None, passphrase=None, mnemonic=None,
                  passphrase_active=False, is_backed_up=False, has_been_synched=False):
         self.label = label
-        self.fingerprint = fingerprint or self._generate_dummy_fingerprint()
+        self.mnemonic = mnemonic.strip() if mnemonic else None
+        self.fingerprint = (
+            fingerprint
+            or self._fingerprint_from_mnemonic()
+            or self._generate_dummy_fingerprint()
+        )
         self.passphrase = passphrase
         self.passphrase_active = passphrase_active
         self.is_backed_up = is_backed_up
         self.has_been_synched = has_been_synched #used to log synching of default wallet per seed
-
+    def _fingerprint_from_mnemonic(self):
+        """Calculate the real BIP32 fingerprint for an imported seed."""
+        if not self.mnemonic or bip39 is None or bip32 is None:
+            return None
+        if not bip39.mnemonic_is_valid(self.mnemonic):
+            raise ValueError("Invalid BIP39 recovery phrase")
+        root = bip32.HDKey.from_seed(
+            bip39.mnemonic_to_seed(self.mnemonic, "")
+        )
+        return root.child(0).fingerprint.hex()
     @staticmethod
     def _generate_dummy_fingerprint():
         """Generate a fake fingerprint for mock purposes."""
@@ -48,16 +68,7 @@ class Seed:
         return [seed.get_fingerprint() for seed in seeds]
 
     def known_bip85_derivations(self, all_seeds):
-        """Mock BIP85 child discovery: return seeds directly derived from this one.
-
-        Mock rule (stable and easy to control in fixtures): another seed is a
-        candidate when its active fingerprint shares this seed's first 3
-        characters and sorts lexicographically after it. A candidate belongs
-        to the closest such ancestor, so this returns direct children only.
-        This keeps the mock hierarchy independent of labels while allowing an
-        active passphrase to change the derivation identity. Later replaced by
-        real BIP85 derivation records.
-        """
+        """Mock BIP85 child discovery for legacy fingerprint-only fixtures."""
         fingerprint = self.get_fingerprint()
         prefix = fingerprint[:3]
         children = []

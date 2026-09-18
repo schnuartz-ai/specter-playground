@@ -25,6 +25,12 @@ class Context:
 _MENU_CONTEXT = {
     "main":              Context.MAIN,
     "manage_settings":   Context.DEVICE,
+    "sdcard":             Context.DEVICE,
+    "load_sd":            Context.DEVICE,
+    "import_from_sd":     Context.DEVICE,
+    "store_to_sd":        Context.DEVICE,
+    "clear_from_sd":      Context.DEVICE,
+    "signing":            Context.DEVICE,
     "add_seed":          Context.ADD_SEED,
     "manage_seedphrase": Context.SEED,
     "add_wallet":        Context.ADD_WALLET,

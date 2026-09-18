@@ -36,7 +36,7 @@ specter_state._hasQR = True
 specter_state._enabledQR = True
 
 specter_state._hasSD = True
-specter_state._enabledSD = False
+specter_state._enabledSD = True
 specter_state._detectedSD = True
 specter_state._SD_hasSeed = True
 

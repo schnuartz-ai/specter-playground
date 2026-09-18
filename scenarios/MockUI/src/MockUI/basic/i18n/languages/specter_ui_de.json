@@ -334,6 +334,74 @@
       "text": "SD-Karte verwalten",
       "ref_en": "Manage SD Card"
     },
+    "SD_CARD_NO_CARD": {
+      "text": "Keine SD-Karte erkannt",
+      "ref_en": "No SD Card detected"
+    },
+    "SD_CARD_LOAD_ALL": {
+      "text": "Alle Seedphrases laden",
+      "ref_en": "Load All From Seed Phrase"
+    },
+    "SD_CARD_SAVE_ACTIVE": {
+      "text": "Aktiven Seed auf SD-Karte speichern",
+      "ref_en": "Save Active Seed to SD Card"
+    },
+    "SD_CARD_SUMMARY": {
+      "text": "%d Seed(s) | %d Wallet(s) | %d Transaktion(en) | %d sonstige Datei(en)",
+      "ref_en": "%d seed(s) | %d wallet(s) | %d transaction(s) | %d other file(s)"
+    },
+    "SD_CARD_EMPTY": {
+      "text": "Die SD-Karte ist leer",
+      "ref_en": "The SD card is empty"
+    },
+    "SD_CARD_SEEDS": {
+      "text": "Seedphrases",
+      "ref_en": "Seed phrases"
+    },
+    "SD_CARD_WALLETS": {
+      "text": "Wallet-Deskriptoren",
+      "ref_en": "Wallet descriptors"
+    },
+    "SD_CARD_TRANSACTIONS": {
+      "text": "Bitcoin-Transaktionen",
+      "ref_en": "Bitcoin transactions"
+    },
+    "SD_CARD_OTHER": {
+      "text": "Sonstige Dateien",
+      "ref_en": "Other files"
+    },
+    "SD_CARD_NO_ACTIVE_SEED": {
+      "text": "Kein aktiver Seed mit Seedphrase ausgewählt",
+      "ref_en": "No mnemonic-backed active seed is selected"
+    },
+    "SD_CARD_SAVED": {
+      "text": "Gespeichert als %s",
+      "ref_en": "Saved as %s"
+    },
+    "SD_CARD_ALREADY_IMPORTED": {
+      "text": "Alle Seedphrases und Wallets sind bereits importiert",
+      "ref_en": "All seed phrases and wallets are already imported"
+    },
+    "SD_CARD_IMPORTED": {
+      "text": "%d Seedphrase(n) und %d Wallet(s) importiert",
+      "ref_en": "Imported %d seed phrase(s) and %d wallet(s)"
+    },
+    "SD_CARD_FAILED": {
+      "text": "%d Datei(en) fehlgeschlagen",
+      "ref_en": "%d file(s) failed"
+    },
+    "SD_CARD_SIGNING_TITLE": {
+      "text": "PSBT signieren",
+      "ref_en": "PSBT signing"
+    },
+    "SD_CARD_SIGNING_FILE": {
+      "text": "SD-Kartendatei: %s",
+      "ref_en": "SD card file: %s"
+    },
+    "SD_CARD_SIGNING_READY": {
+      "text": "PSBT ist für den Signier-Flow bereit",
+      "ref_en": "PSBT is ready for the signing flow"
+    },
     "LOCKED_MENU_TITLE": {
       "text": "Gerät gesperrt",
       "ref_en": "Device Locked"

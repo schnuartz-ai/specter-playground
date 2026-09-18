@@ -2,7 +2,35 @@
 import sys
 import os
 import random
+from pathlib import Path
 from types import ModuleType
+
+# Make the firmware helpers (helpers.py/rng.py) available to host-side SD
+# storage tests without shadowing Python's stdlib ``platform`` module.
+_SRC_DIR = str(Path(__file__).parent.parent / "src")
+if _SRC_DIR not in sys.path:
+    sys.path.append(_SRC_DIR)
+
+if "ucryptolib" not in sys.modules:
+    from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+
+    class _AESCipher:
+        def __init__(self, key, mode, iv):
+            if mode != 2:
+                raise ValueError("The test shim only supports AES-CBC")
+            self._cipher = Cipher(algorithms.AES(key), modes.CBC(iv))
+
+        def encrypt(self, data):
+            encryptor = self._cipher.encryptor()
+            return encryptor.update(data) + encryptor.finalize()
+
+        def decrypt(self, data):
+            decryptor = self._cipher.decryptor()
+            return decryptor.update(data) + decryptor.finalize()
+
+    ucryptolib_mock = ModuleType("ucryptolib")
+    ucryptolib_mock.aes = _AESCipher
+    sys.modules["ucryptolib"] = ucryptolib_mock
 
 # Mock micropython module BEFORE pytest discovers MockUI package
 # Pattern from specter-diy: libs/common/embit/misc.py

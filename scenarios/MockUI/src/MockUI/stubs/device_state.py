@@ -27,9 +27,12 @@ class DeviceState:
 
         # Seed related — ephemeral, cleared on power cycle
         self.loaded_seeds = []
+        self.active_seed = None
 
         # Wallet (descriptor) related — persisted in flash
         self.registered_wallets = []
+        self.active_wallet = None
+        self.pending_psbt = None
 
         #KeyStores
         self._SmartCard_hasSeed = False
@@ -122,13 +125,29 @@ class DeviceState:
     # ── Seed helpers ─────────────────────────────────────────────────
     def add_seed(self, seed):
         """Load a seed into memory. Returns the default wallet (created if needed)."""
+        if getattr(seed, "mnemonic", None):
+            for existing in self.loaded_seeds:
+                if getattr(existing, "mnemonic", None) == seed.mnemonic:
+                    self.set_active_seed(existing)
+                    return self._ensure_default_wallet()
         self.loaded_seeds.append(seed)
-        return self._ensure_default_wallet()
+        wallet = self._ensure_default_wallet()
+        self.set_active_seed(seed)
+        if self.active_wallet is None:
+            self.set_active_wallet(wallet)
+        return wallet
+
+    def set_active_seed(self, seed):
+        self.active_seed = seed
+        if seed is not None and not self.seed_matches_wallet(seed, self.active_wallet):
+            self.active_wallet = self._ensure_default_wallet()
 
     def remove_seed(self, seed):
         """Remove a seed from loaded seeds."""
         if seed in self.loaded_seeds:
             self.loaded_seeds.remove(seed)
+        if self.active_seed is seed:
+            self.active_seed = self.loaded_seeds[0] if self.loaded_seeds else None
 
     def wallets_for_seed(self, seed):
         """Return wallets that match this seed (including the shared Default Wallet)."""
@@ -145,7 +164,7 @@ class DeviceState:
         return wallet in self.wallets_for_seed(seed)
 
     # ── Wallet helpers ───────────────────────────────────────────────
-    def register_wallet(self, wallet, imported=False):
+    def register_wallet(self, wallet, imported=False, source="SD card"):
         """Register a wallet descriptor. Returns the wallet.
 
         Args:
@@ -156,8 +175,14 @@ class DeviceState:
         """
         if imported:
             wallet.has_been_exported = True
+            if hasattr(wallet, "mark_shared"):
+                wallet.mark_shared(source)
         self.registered_wallets.append(wallet)
+        self.set_active_wallet(wallet)
         return wallet
+
+    def set_active_wallet(self, wallet):
+        self.active_wallet = wallet
 
     def remove_wallet(self, wallet):
         """Remove a wallet descriptor."""

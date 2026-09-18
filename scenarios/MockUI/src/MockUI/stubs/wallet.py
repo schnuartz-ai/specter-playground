@@ -36,6 +36,8 @@ class Wallet:
         # True when wallet was imported from companion app (QR/SD) or
         # explicitly exported via Connect Companion App flow.
         self.has_been_synched = has_been_synched
+        self.has_been_exported = has_been_synched
+        self.shared_with = []
         self.account = account
         # BIP32-style path string (e.g. "m/84'/0'/0'"); mock only for now.
         self.derivation_path = derivation_path
@@ -75,6 +77,13 @@ class Wallet:
     def is_default_wallet(self):
         """Check if this wallet is the default "Standard" wallet."""
         return self.label == "Default" and self.descriptor == "default"
+
+    def mark_shared(self, source):
+        """Record the companion/storage source that supplied this wallet."""
+        self.has_been_exported = True
+        self.has_been_synched = True
+        if source and source not in self.shared_with:
+            self.shared_with.append(source)
 
 
 class WalletType:

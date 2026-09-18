@@ -15,7 +15,12 @@ import base64
 import json
 import os
 from contextlib import contextmanager
+from binascii import hexlify
+
 from embit import bip39
+
+from helpers import aead_decrypt, aead_encrypt, tagged_hash
+from rng import get_random_bytes
 
 
 class StorageError(Exception):
@@ -28,7 +33,7 @@ class SeedStorage:
     SD_WALLET = "wallet"
     SD_OTHER = "other"
 
-    def __init__(self, flash_root="/flash", sd_root="/sd"):
+    def __init__(self, flash_root="/flash", sd_root="/sd", encryption_key=None):
         # The browser/simulator can expose the virtual card below /state/sd.
         if sd_root == "/sd":
             try:
@@ -47,6 +52,8 @@ class SeedStorage:
         self.flash_root = flash_root.rstrip("/") or "/"
         self.sd_root = sd_root.rstrip("/") or "/"
         self._ensure_dir(self.flash_root)
+        self._encryption_key = encryption_key
+        self.device_secret = self._load_or_create_secret()
 
     @staticmethod
     def _ensure_dir(path):
@@ -54,6 +61,36 @@ class SeedStorage:
             os.mkdir(path)
         except OSError:
             pass
+
+    def _load_or_create_secret(self):
+        path = self.flash_root + "/mockui-device-secret"
+        try:
+            with open(path, "rb") as stream:
+                secret = stream.read()
+            if len(secret) == 32:
+                return secret
+        except OSError:
+            pass
+
+        secret = get_random_bytes(32)
+        try:
+            with open(path, "wb") as stream:
+                stream.write(secret)
+        except OSError:
+            # A read-only test/simulator root can still browse public files.
+            pass
+        return secret
+
+    @property
+    def encryption_key(self):
+        if self._encryption_key is not None:
+            return self._encryption_key
+        return tagged_hash("scenc", self.device_secret)
+
+    @property
+    def sd_prefix(self):
+        card_id = hexlify(tagged_hash("sdid", self.device_secret)[:4]).decode()
+        return "specterdiy" + card_id
 
     def sd_present(self):
         """Return the live card state without touching card contents."""
@@ -76,6 +113,14 @@ class SeedStorage:
             return True
         except OSError:
             return False
+
+    @staticmethod
+    def _safe_name(name):
+        clean = "".join(
+            char for char in (name or "seed")
+            if char.isalnum() or char in "-_ "
+        ).strip()
+        return clean.replace(" ", "_") or "seed"
 
     @staticmethod
     def _as_name(value):
@@ -130,6 +175,15 @@ class SeedStorage:
                     card.unmount()
                 except (RuntimeError, OSError):
                     pass
+
+    def list_sd_seeds(self):
+        if not self.sd_present():
+            return []
+        prefix = self.sd_prefix.lower()
+        return sorted(
+            name for name in self._list_names()
+            if name.lower().startswith(prefix)
+        )
 
     def list_sd_files(self):
         if not self.sd_present():
@@ -231,7 +285,7 @@ class SeedStorage:
             except (OSError, StorageError):
                 size = 0
 
-        if filename.lower().startswith("specterdiy"):
+        if filename.lower().startswith(self.sd_prefix.lower()):
             return {
                 "name": filename,
                 "size": size,
@@ -291,3 +345,62 @@ class SeedStorage:
             self.classify_sd_file(filename, size)
             for filename, size in self.list_sd_files()
         ]
+
+    def load_sd_mnemonic(self, filename):
+        if filename.lower().startswith(self.sd_prefix.lower()):
+            return self.load_sd_seed(filename)
+        mnemonic = self._mnemonic_from_text(
+            self._text_payload(self._read_sd_file(filename))
+        )
+        if not mnemonic:
+            raise StorageError("File does not contain a valid BIP39 seed phrase")
+        return mnemonic
+
+    def load_sd_wallet(self, filename):
+        payload = self._wallet_from_text(
+            self._text_payload(self._read_sd_file(filename))
+        )
+        if not payload:
+            raise StorageError("File does not contain a wallet descriptor")
+        return payload
+
+    def save_sd_seed(self, mnemonic, name):
+        if not self.sd_present():
+            raise StorageError("SD card is not inserted")
+        if not bip39.mnemonic_is_valid(mnemonic):
+            raise StorageError("Recovery phrase is not valid BIP39")
+        filename = "%s.%s" % (self.sd_prefix, self._safe_name(name))
+        with self._mounted_sd():
+            with open(self._path(filename), "wb") as stream:
+                stream.write(aead_encrypt(self.encryption_key, b"", mnemonic.encode()))
+        return filename
+
+    def load_sd_seed(self, filename):
+        if filename not in self.list_sd_seeds():
+            raise StorageError("Seed file was not found on this SD card")
+        try:
+            with self._mounted_sd():
+                with open(self._path(filename), "rb") as stream:
+                    payload = stream.read()
+            _, plaintext = aead_decrypt(payload, self.encryption_key)
+            mnemonic = plaintext.decode()
+        except Exception as exc:
+            raise StorageError(
+                "Seed file belongs to another device or is damaged"
+            ) from exc
+        if not bip39.mnemonic_is_valid(mnemonic):
+            raise StorageError("Stored recovery phrase is invalid")
+        return mnemonic
+
+    def delete_sd_file(self, filename):
+        path = self._path(filename)
+        try:
+            with self._mounted_sd():
+                os.remove(path)
+        except OSError as exc:
+            raise StorageError("SD card file could not be deleted") from exc
+
+    def delete_sd_seed(self, filename):
+        if filename not in self.list_sd_seeds():
+            raise StorageError("Seed file was not found on this SD card")
+        self.delete_sd_file(filename)
