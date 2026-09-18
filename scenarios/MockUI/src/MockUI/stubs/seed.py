@@ -33,6 +33,10 @@ class Seed:
         self.passphrase_active = passphrase_active
         self.is_backed_up = is_backed_up
         self.has_been_synched = has_been_synched #used to log synching of default wallet per seed
+        # Filled by DeviceState.sort_bip85_seeds().
+        self.bip85_parent_fingerprint = None
+        self.bip85_index = None
+        self.bip85_depth = 0
     def _fingerprint_from_mnemonic(self):
         """Calculate the real BIP32 fingerprint for an imported seed."""
         if not self.mnemonic or bip39 is None or bip32 is None:
@@ -68,7 +72,18 @@ class Seed:
         return [seed.get_fingerprint() for seed in seeds]
 
     def known_bip85_derivations(self, all_seeds):
-        """Mock BIP85 child discovery for legacy fingerprint-only fixtures."""
+        """Return the BIP85 children discovered by DeviceState.
+
+        Legacy dummy-only fixtures still use the deterministic fingerprint
+        heuristic so the existing selector-tree tests remain useful. Real
+        mnemonic-backed seeds are populated by ``sort_bip85_seeds`` and never
+        fall back to that heuristic.
+        """
+        if hasattr(self, "_bip85_children"):
+            return list(self._bip85_children)
+        if any(getattr(seed, "mnemonic", None) for seed in all_seeds):
+            return []
+
         fingerprint = self.get_fingerprint()
         prefix = fingerprint[:3]
         children = []

@@ -13,13 +13,16 @@ class SeedDropUp(DropUp):
     EXPANSION_CONTEXT = Context.SEED
 
     def _get_selectable_items(self):
+        # SD imports may add several seeds at once.  Recompute the real BIP85
+        # relationships before TreeList builds its forest so the existing
+        # selector controls render the same hierarchy as manually loaded seeds.
+        self.device_state.sort_bip85_seeds()
         return self.device_state.loaded_seeds
 
     def _delete_from_gui(self, seed):
         self.gui.delete_seed(seed)
 
     def _get_item_children(self, seed):
-        # Mock discovery until real BIP85 derivation records exist.
         return seed.known_bip85_derivations(self.device_state.loaded_seeds)
 
     def _get_item_key(self, seed):
@@ -60,4 +63,3 @@ class SeedDropUp(DropUp):
                 MenuItem(text=self.t("COMMON_OK")),
             ],
         )
-

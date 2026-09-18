@@ -137,7 +137,7 @@ class SDCardMenu(GenericMenu):
         except Exception as exc:
             self._show_status(str(exc), True)
 
-    def _import_seed(self, filename, label):
+    def _import_seed(self, filename, label, sort=True):
         mnemonic = self.storage.load_sd_mnemonic(filename)
         state = self.device_state
         seed = next(
@@ -153,6 +153,8 @@ class SDCardMenu(GenericMenu):
             state.add_seed(seed)
         else:
             state.set_active_seed(seed)
+        if sort:
+            state.sort_bip85_seeds()
         self.ui_state.set_active_seed(seed)
         return seed, imported
 
@@ -161,11 +163,14 @@ class SDCardMenu(GenericMenu):
         imported_wallets = 0
         failures = 0
 
-        # Read all importable entries before refreshing the peripheral state.
+        # Read all entries first.  BIP85 sorting happens once after the full
+        # set is available, so children cannot be left detached by ordering.
         for entry in self.storage.list_sd_entries():
             try:
                 if entry["kind"] == self.storage.SD_SEED:
-                    _, imported = self._import_seed(entry["name"], entry["label"])
+                    _, imported = self._import_seed(
+                        entry["name"], entry["label"], sort=False
+                    )
                     imported_seeds += int(imported)
                 elif entry["kind"] == self.storage.SD_WALLET:
                     _, imported = self._import_wallet(
@@ -176,6 +181,7 @@ class SDCardMenu(GenericMenu):
                 failures += 1
                 print("SD bulk import:", entry["name"], exc)
 
+        self.device_state.sort_bip85_seeds()
         self.device_state.refresh_peripherals()
         if not imported_seeds and not imported_wallets and not failures:
             self._show_status(t("SD_CARD_ALREADY_IMPORTED"))
