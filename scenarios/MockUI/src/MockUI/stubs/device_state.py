@@ -50,6 +50,7 @@ class DeviceState:
         self._hasSmartCard = False
         self._enabledSmartCard = False
         self._detectedSmartCard = False
+        self._storage = None
 
         # misc
         self.language = "eng"
@@ -70,6 +71,7 @@ class DeviceState:
     def SD_enabled(self):
         return self.hasSD() and self._enabledSD
     def SD_detected(self):
+        self.refresh_peripherals()
         return self.SD_enabled() and self._detectedSD
     def SD_hasSeed(self):
         return self.SD_detected() and self._SD_hasSeed
@@ -93,6 +95,29 @@ class DeviceState:
         self._enabledSD = bool(enabled)
     def set_SmartCard_enabled(self, enabled):
         self._enabledSmartCard = bool(enabled)
+
+    @property
+    def storage(self):
+        """Lazily create the SD service used by the MockUI."""
+        if self._storage is None:
+            from ..storage import SeedStorage
+            self._storage = SeedStorage()
+        return self._storage
+
+    def refresh_peripherals(self):
+        """Refresh SD presence and seed availability from live storage."""
+        if self._storage is None:
+            return
+        try:
+            self._detectedSD = self.storage.sd_present()
+            self._SD_hasSeed = (
+                bool(self.storage.list_sd_files())
+                if self._detectedSD else False
+            )
+        except Exception as exc:
+            print("SD status:", exc)
+            self._detectedSD = False
+            self._SD_hasSeed = False
 
     # ── Seed helpers ─────────────────────────────────────────────────
     def add_seed(self, seed):
@@ -210,4 +235,3 @@ class DeviceState:
                 self.battery_pct = max(0, self.battery_pct - 10)
                 if self.battery_pct == 0:
                     self.is_charging = True
-
