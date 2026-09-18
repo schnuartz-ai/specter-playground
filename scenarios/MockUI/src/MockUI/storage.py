@@ -1,17 +1,35 @@
-"""SD-card presence and directory access for the MockUI."""
+"""SD-card storage services used by the MockUI.
 
+The MockUI is also used with the unix simulator, so this module deliberately
+keeps the filesystem seam small: on hardware ``/sd`` is provided by the
+existing ``platform.sdcard`` driver, while tests and the browser-style
+simulator can inject a directory directly.
+
+Encrypted Specter seed files use the same ``specterdiy<id>.<label>`` naming
+convention and AEAD primitives as the firmware keystore.  The small
+device-secret fallback is only for the standalone MockUI state, where the
+full application keystore is not constructed.
+"""
+
+import base64
+import json
 import os
 from contextlib import contextmanager
+from embit import bip39
 
 
 class StorageError(Exception):
-    """An SD-card operation failed."""
+    """An SD-card operation failed or the file contents are invalid."""
 
 
 class SeedStorage:
-    """Small filesystem adapter shared by the simulator and hardware."""
+    SD_SEED = "seed"
+    SD_TRANSACTION = "transaction"
+    SD_WALLET = "wallet"
+    SD_OTHER = "other"
 
     def __init__(self, flash_root="/flash", sd_root="/sd"):
+        # The browser/simulator can expose the virtual card below /state/sd.
         if sd_root == "/sd":
             try:
                 import platform
@@ -37,12 +55,6 @@ class SeedStorage:
         except OSError:
             pass
 
-    @staticmethod
-    def _as_name(value):
-        if isinstance(value, bytes):
-            return value.decode("utf-8", "replace")
-        return value
-
     def sd_present(self):
         """Return the live card state without touching card contents."""
         try:
@@ -65,6 +77,12 @@ class SeedStorage:
         except OSError:
             return False
 
+    @staticmethod
+    def _as_name(value):
+        if isinstance(value, bytes):
+            return value.decode("utf-8", "replace")
+        return value
+
     def _list_names(self):
         with self._mounted_sd():
             try:
@@ -72,6 +90,7 @@ class SeedStorage:
                 names = []
                 for entry in entries:
                     name = self._as_name(entry[0])
+                    # MicroPython marks directories as 0x4000.
                     if len(entry) < 2 or entry[1] != 0x4000:
                         names.append(name)
                 return names
@@ -88,7 +107,7 @@ class SeedStorage:
 
     @contextmanager
     def _mounted_sd(self):
-        """Mount the physical card for one filesystem operation."""
+        """Mount the real card for the duration of one filesystem operation."""
         card = None
         mounted_here = False
         try:
@@ -113,7 +132,6 @@ class SeedStorage:
                     pass
 
     def list_sd_files(self):
-        """Return the card's regular files and their byte sizes."""
         if not self.sd_present():
             return []
         files = []
@@ -124,3 +142,152 @@ class SeedStorage:
                 size = 0
             files.append((name, size))
         return files
+
+    def _path(self, filename):
+        if not filename or "/" in filename or "\\" in filename:
+            raise StorageError("Invalid SD card filename")
+        return self.sd_root + "/" + filename
+
+    def _read_sd_file(self, filename):
+        try:
+            with self._mounted_sd():
+                with open(self._path(filename), "rb") as stream:
+                    return stream.read()
+        except OSError as exc:
+            raise StorageError("SD card file could not be read") from exc
+
+    @staticmethod
+    def _text_payload(data):
+        try:
+            text = data.decode().strip()
+        except (UnicodeError, ValueError):
+            return None
+        if text.startswith("\ufeff"):
+            text = text[1:].strip()
+        return text
+
+    @staticmethod
+    def _mnemonic_from_text(text):
+        if not text:
+            return None
+        mnemonic = " ".join(text.split())
+        try:
+            return mnemonic if bip39.mnemonic_is_valid(mnemonic) else None
+        except Exception:
+            return None
+
+    @staticmethod
+    def _wallet_from_text(text):
+        if not text:
+            return None
+        try:
+            payload = json.loads(text)
+        except (TypeError, ValueError):
+            payload = None
+        if isinstance(payload, dict) and isinstance(payload.get("descriptor"), str):
+            return payload
+
+        descriptor_prefixes = ("pkh(", "wpkh(", "sh(", "wsh(", "tr(", "combo(")
+        if text.startswith(descriptor_prefixes):
+            return {"descriptor": text}
+        return None
+
+    @staticmethod
+    def _is_psbt(data, text):
+        if data.startswith(b"psbt\xff"):
+            return True
+        if text and text.startswith("cHNidP"):
+            try:
+                try:
+                    decoded = base64.b64decode(text, validate=True)
+                except TypeError:
+                    # MicroPython's base64 module has no ``validate`` kwarg.
+                    decoded = base64.b64decode(text)
+                return decoded.startswith(b"psbt\xff")
+            except (ValueError, TypeError):
+                return False
+        return False
+
+    @staticmethod
+    def _display_name(filename):
+        name = filename.rsplit(".", 1)[0].replace("_", " ").replace("-", " ")
+        parts = name.split()
+        if parts and parts[0].isdigit():
+            parts = parts[1:]
+        return " ".join(parts) or filename
+
+    @staticmethod
+    def _transaction_detail(filename):
+        lowered = filename.lower()
+        if ".signed." in lowered or ".completed." in lowered or lowered.startswith("signed"):
+            return "Signed transaction | PSBT"
+        return "Bitcoin transaction | PSBT"
+
+    def classify_sd_file(self, filename, size=None):
+        """Return UI metadata while keeping the original filename for actions."""
+        if size is None:
+            try:
+                size = os.stat(self._path(filename))[6]
+            except (OSError, StorageError):
+                size = 0
+
+        if filename.lower().startswith("specterdiy"):
+            return {
+                "name": filename,
+                "size": size,
+                "kind": self.SD_SEED,
+                "label": self._display_name(filename.split(".", 1)[-1]),
+                "detail": "Encrypted seed phrase",
+                "word_count": None,
+                "encrypted": True,
+            }
+
+        try:
+            data = self._read_sd_file(filename)
+        except StorageError:
+            data = b""
+        text = self._text_payload(data)
+        mnemonic = self._mnemonic_from_text(text)
+        if mnemonic:
+            return {
+                "name": filename,
+                "size": size,
+                "kind": self.SD_SEED,
+                "label": self._display_name(filename),
+                "detail": "Seed phrase | %d words" % len(mnemonic.split()),
+                "word_count": len(mnemonic.split()),
+                "encrypted": False,
+            }
+
+        if self._is_psbt(data, text) or filename.lower().endswith(".psbt"):
+            return {
+                "name": filename,
+                "size": size,
+                "kind": self.SD_TRANSACTION,
+                "label": self._display_name(filename),
+                "detail": self._transaction_detail(filename),
+            }
+
+        wallet = self._wallet_from_text(text)
+        if wallet:
+            return {
+                "name": filename,
+                "size": size,
+                "kind": self.SD_WALLET,
+                "label": wallet.get("label") or self._display_name(filename),
+                "detail": "Wallet descriptor",
+            }
+
+        return {
+            "name": filename,
+            "size": size,
+            "kind": self.SD_OTHER,
+            "label": self._display_name(filename),
+            "detail": "Other file",
+        }
+
+    def list_sd_entries(self):
+        return [
+            self.classify_sd_file(filename, size)
+            for filename, size in self.list_sd_files()
+        ]
